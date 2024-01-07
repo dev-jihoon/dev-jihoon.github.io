@@ -286,5 +286,5 @@ document.querySelector("#resultBox").addEventListener("click", (event) => {
 });
 
 document.querySelector("#resultClose").addEventListener("click", (event) => {
-    event.target.classList.remove("active");
+    document.querySelector("#resultBox").classList.remove("active");
 });
