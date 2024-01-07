@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="경기도의 중학교에 재학중인 학생들을 대상으로 한 내신성적산출기입니다." />
+        <meta property="og:url" content="dev-jihoon.github.io" />
+        <meta property="og:title" content="2024학년도 중학교 내신성적산출기" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="src/images/meta.png" />
+        <meta property="og:description" content="경기도의 중학교에 재학중인 학생들을 대상으로 한 내신성적산출기입니다." />
+        <title>2024학년도 중학교 내신성적산출기</title>
+
+        <link rel="stylesheet" href="/grade/src/css/selector.css" />
+
+        <link rel="stylesheet" href="/grade/src/css/style.css" />
+        <script type="module" src="/grade/src/js/script.js" defer></script>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>2024학년도 중학교<br />내신성적산출기</h1>
+                <p><b>경기도</b>의 중학교에 재학중인 학생들을 대상으로 한 내신성적산출기입니다.</p>
+                <p>백엔드가 없는 사이트로써 정보 수집을 하지 않고 있습니다.</p>
+            </div>
+            <div class="main">
+                <h3>교과</h3>
+                <div id="semesters"></div>
+                <h3>비교과</h3>
+                <div class="card">
+                    <div class="card-header">
+                        <p class="title">출결상황</p>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>학년</th>
+                                <th>미인정결석</th>
+                                <th>미인정지각</th>
+                                <th>미인정조퇴</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1학년</td>
+                                <td>
+                                    <input type="number" name="absenceInput" class="input" value="0" placeholder="입력" />
+                                </td>
+                                <td>
+                                    <input type="number" name="tardinessInput" class="input" value="0" placeholder="입력" />
+                                </td>
+                                <td>
+                                    <input type="number" name="leaveInput" class="input" value="0" placeholder="입력" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2학년</td>
+                                <td>
+                                    <input type="number" name="absenceInput" class="input" value="0" placeholder="입력" />
+                                </td>
+                                <td>
+                                    <input type="number" name="tardinessInput" class="input" value="0" placeholder="입력" />
+                                </td>
+                                <td>
+                                    <input type="number" name="leaveInput" class="input" value="0" placeholder="입력" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3학년</td>
+                                <td>
+                                    <input type="number" name="absenceInput" class="input" value="0" placeholder="입력" />
+                                </td>
+                                <td>
+                                    <input type="number" name="tardinessInput" class="input" value="0" placeholder="입력" />
+                                </td>
+                                <td>
+                                    <input type="number" name="leaveInput" class="input" value="0" placeholder="입력" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <p class="title">봉사활동</p>
+                    </div>
+                    <div class="input-box">
+                        <input type="number" id="volunteerInput" class="input"required />
+                        <label for="volunteerInput" class="placeholder">봉사누계</label>
+                        <span>시간</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <p class="title">학교활동</p>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>학년</th>
+                                <th>1학기 수상/<br>임원활동</th>
+                                <th>2학기 수상/<br>임원활동</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1학년</td>
+                                <td>
+                                    <input type="checkbox" name="awardInput" class="input" />
+                                </td>
+                                <td>
+                                    <input type="checkbox" name="awardInput" class="input" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2학년</td>
+                                <td>
+                                    <input type="checkbox" name="awardInput" class="input" />
+                                </td>
+                                <td>
+                                    <input type="checkbox" name="awardInput" class="input" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3학년</td>
+                                <td>
+                                    <input type="checkbox" name="awardInput" class="input" />
+                                </td>
+                                <td>
+                                    <input type="checkbox" name="awardInput" class="input" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>
+                    내신성적산출은 경기도교육청 고등학교 입학전학 포털에서 제공하는 <a class="link" href="https://satp.goe.go.kr/satp/resources/files/guide_4.pdf">내신성적반영지침</a>을 기준으로 하고
+                    있습니다.
+                </p>
+                <p>본 사이트에서 제공하는 내신성적산출 결과는 단순 계산용이며, 아무런 효력이 없음을 알려드립니다.</p>
+                <br />
+                <br />
+                <br />
+                <div class="button-box bottom">
+                    <button type="button" id="addSemester" class="button">학기 추가하기</button>
+                    <button type="button" id="calculate" class="button active">성적 산출하기</button>
+                </div>
+            </div>
+        </div>
+        <div id="selectorBox" class="selector-box">
+            <div class="selector">
+                <div class="selector-header">
+                    <span id="selectorTitle" class="title"></span>
+                </div>
+                <div id="optionBox" class="option-box"></div>
+            </div>
+        </div>
+    </body>
+</html>

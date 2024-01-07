@@ -1,0 +1,99 @@
+.selector-box {
+    display: none;
+    opacity: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.1s;
+}
+
+.selector-box.active {
+    display: block;
+    opacity: 1;
+}
+
+.selector {
+    box-sizing: border-box;
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    width: calc(100% - 20px);
+    max-width: 450px;
+    margin: 0 auto;
+    padding: 20px;
+    border-radius: 15px;
+    background: #fff;
+    animation: slide-up 0.25s ease;
+    transform: translateX(-50%);
+}
+
+.selector-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.selector-header .title {
+    font-size: 1.17em;
+    font-weight: bold;
+}
+
+.option-box {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+.option {
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    text-align: left;
+    background: #fff;
+    transition: all 0.25s ease;
+}
+
+.option:hover {
+    background: #f7f7f7;
+    cursor: pointer;
+}
+
+.select {
+    box-sizing: border-box;
+    position: relative;
+    width: 100%;
+    padding: 5px;
+    border: none;
+    border-bottom: 2px solid #c8c8c8;
+    font-size: 11pt;
+    text-align: left;
+    text-decoration: none;
+    color: #000;
+    background: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.select::before {
+    content: url(../icons/expand.svg);
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    top: 50%;
+    right: 5px;
+    pointer-events: none;
+    transform: translateY(-50%);
+}
+
+.select:hover {
+    cursor: pointer;
+    border-bottom: 2px solid #0062ff;
+}
