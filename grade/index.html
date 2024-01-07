@@ -2,12 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Document</title>
-    </head>
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
         <meta name="description" content="경기도의 중학교에 재학중인 학생들을 대상으로 한 내신성적산출기입니다." />
         <meta property="og:url" content="dev-jihoon.github.io" />
         <meta property="og:title" content="2024학년도 중학교 내신성적산출기" />
@@ -16,10 +11,15 @@
         <meta property="og:description" content="경기도의 중학교에 재학중인 학생들을 대상으로 한 내신성적산출기입니다." />
         <title>2024학년도 중학교 내신성적산출기</title>
 
-        <link rel="stylesheet" href="/grade/src/css/selector.css" />
+        <link rel="shortcut icon" href="/grade/src/images/favicon.ico" />
+        <link rel="apple-touch-icon" href="/grade/src/images/favicon.ico" />
+        <link rel="icon" href="/grade/src/images/favicon.ico" />
 
-        <link rel="stylesheet" href="/grade/src/css/style.css" />
-        <script type="module" src="/grade/src/js/script.js" defer></script>
+        <link rel="stylesheet" href="/grade/src/fonts/pretendard.css?v=1" />
+        <link rel="stylesheet" href="/grade/src/css/selector.css?v=1" />
+
+        <link rel="stylesheet" href="/grade/src/css/style.css?v=1" />
+        <script type="module" src="/grade/src/js/script.js?v=1" defer></script>
     </head>
     <body>
         <div class="container">
@@ -40,46 +40,46 @@
                         <thead>
                             <tr>
                                 <th>학년</th>
-                                <th>미인정결석</th>
-                                <th>미인정지각</th>
-                                <th>미인정조퇴</th>
+                                <th>미인정<br>결석</th>
+                                <th>미인정<br>지각</th>
+                                <th>미인정<br>조퇴</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td>1학년</td>
                                 <td>
-                                    <input type="number" name="absenceInput" class="input" value="0" placeholder="입력" />
+                                    <input type="number" name="absenceInput" class="input" value="0" placeholder="입력", inputmode="numeric" />
                                 </td>
                                 <td>
-                                    <input type="number" name="tardinessInput" class="input" value="0" placeholder="입력" />
+                                    <input type="number" name="tardinessInput" class="input" value="0" placeholder="입력" inputmode="numeric" />
                                 </td>
                                 <td>
-                                    <input type="number" name="leaveInput" class="input" value="0" placeholder="입력" />
+                                    <input type="number" name="leaveInput" class="input" value="0" placeholder="입력" inputmode="numeric" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>2학년</td>
                                 <td>
-                                    <input type="number" name="absenceInput" class="input" value="0" placeholder="입력" />
+                                    <input type="number" name="absenceInput" class="input" value="0" placeholder="입력" inputmode="numeric" />
                                 </td>
                                 <td>
-                                    <input type="number" name="tardinessInput" class="input" value="0" placeholder="입력" />
+                                    <input type="number" name="tardinessInput" class="input" value="0" placeholder="입력" inputmode="numeric" />
                                 </td>
                                 <td>
-                                    <input type="number" name="leaveInput" class="input" value="0" placeholder="입력" />
+                                    <input type="number" name="leaveInput" class="input" value="0" placeholder="입력" inputmode="numeric" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>3학년</td>
                                 <td>
-                                    <input type="number" name="absenceInput" class="input" value="0" placeholder="입력" />
+                                    <input type="number" name="absenceInput" class="input" value="0" placeholder="입력" inputmode="numeric" />
                                 </td>
                                 <td>
-                                    <input type="number" name="tardinessInput" class="input" value="0" placeholder="입력" />
+                                    <input type="number" name="tardinessInput" class="input" value="0" placeholder="입력" inputmode="numeric" />
                                 </td>
                                 <td>
-                                    <input type="number" name="leaveInput" class="input" value="0" placeholder="입력" />
+                                    <input type="number" name="leaveInput" class="input" value="0" placeholder="입력" inputmode="numeric" />
                                 </td>
                             </tr>
                         </tbody>
@@ -90,7 +90,7 @@
                         <p class="title">봉사활동</p>
                     </div>
                     <div class="input-box">
-                        <input type="number" id="volunteerInput" class="input"required />
+                        <input type="number" id="volunteerInput" class="input" inputmode="numeric" required />
                         <label for="volunteerInput" class="placeholder">봉사누계</label>
                         <span>시간</span>
                     </div>
@@ -111,28 +111,28 @@
                             <tr>
                                 <td>1학년</td>
                                 <td>
-                                    <input type="checkbox" name="awardInput" class="input" />
+                                    <input type="checkbox" name="awardInput" class="checkbox" />
                                 </td>
                                 <td>
-                                    <input type="checkbox" name="awardInput" class="input" />
+                                    <input type="checkbox" name="awardInput" class="checkbox" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>2학년</td>
                                 <td>
-                                    <input type="checkbox" name="awardInput" class="input" />
+                                    <input type="checkbox" name="awardInput" class="checkbox" />
                                 </td>
                                 <td>
-                                    <input type="checkbox" name="awardInput" class="input" />
+                                    <input type="checkbox" name="awardInput" class="checkbox" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>3학년</td>
                                 <td>
-                                    <input type="checkbox" name="awardInput" class="input" />
+                                    <input type="checkbox" name="awardInput" class="checkbox" />
                                 </td>
                                 <td>
-                                    <input type="checkbox" name="awardInput" class="input" />
+                                    <input type="checkbox" name="awardInput" class="checkbox" />
                                 </td>
                             </tr>
                         </tbody>
@@ -152,12 +152,30 @@
                 </div>
             </div>
         </div>
-        <div id="selectorBox" class="selector-box">
-            <div class="selector">
-                <div class="selector-header">
+        <div id="selectorBox" class="modal-box">
+            <div class="modal">
+                <div class="modal-header">
                     <span id="selectorTitle" class="title"></span>
                 </div>
-                <div id="optionBox" class="option-box"></div>
+                <div id="optionBox" class="modal-content"></div>
+            </div>
+        </div>
+        <div id="resultBox" class="modal-box">
+            <div class="modal">
+                <div class="modal-header">
+                    <span class="title">사용자님의 성적 산출 결과는...</span>
+                </div>
+                <div class="modal-content">
+                    <h1 id="result" class="result"><span id="resultScore"></span>점</h1>
+                    <p> / 200.0</p>
+                    <p>소숫점 2자리까지 반올림된 결과이며 부동 소수점 오차로 인한 ±1점의 오차가 있을 수 있습니다.</p>
+                    <br>
+                    <br>
+                    <br>
+                    <div class="button-box bottom">
+                        <button type="button" id="resultClose" class="button active">확인</button>
+                    </div>
+                </div>
             </div>
         </div>
     </body>

@@ -1,5 +1,9 @@
 * {
-    font-family: "Pretendard-Regular";
+    font-family: "Pretendard", Helvetica, sans-serif;
+}
+
+body {
+    touch-action: pan-y, pan-x;
 }
 
 /* layout */
@@ -21,7 +25,7 @@
     padding: 15px 25px;
     border-radius: 15px;
     color: #005aeb;
-    font-size: 1.05em;
+    font-size: 16px;
     text-decoration: none;
     background: hsl(217, 100%, 90%);
     transition: all 0.25s ease;
@@ -44,7 +48,7 @@
 
 .button-text {
     color: #0062ff;
-    font-size: 1.05em;
+    font-size: 16px;
     font-weight: bold;
     transition: all 0.25s ease;
 }
@@ -102,8 +106,12 @@
 
 .card .title {
     margin: 0px 0px 0px 0px;
-    font-size: 16pt;
+    font-size: 20px;
     font-weight: 600;
+}
+
+/* checkbox */
+.checkbox {
 }
 
 /* input */
@@ -114,7 +122,8 @@
     padding: 5px;
     border: none;
     border-bottom: 2px solid #c8c8c8;
-    font-size: 11pt;
+    border-radius: 0px;
+    font-size: 16px;
     text-align: left;
     text-decoration: none;
     cursor: pointer;
@@ -158,12 +167,78 @@
     font-weight: 300;
 }
 
+.input.invalid {
+    border-bottom: 2px solid #ff0000;
+}
+
 .input-box {
     display: flex;
     flex-direction: row;
     position: relative;
     width: 100%;
     margin-top: 10px;
+}
+
+/* modal */
+.modal-box {
+    display: none;
+    opacity: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.1s;
+}
+
+.modal-box.active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 1;
+}
+
+.modal {
+    box-sizing: border-box;
+    position: absolute;
+    bottom: 10px;
+    width: calc(100% - 20px);
+    max-width: 450px;
+    margin: 0 auto;
+    padding: 20px;
+    border-radius: 15px;
+    background: #fff;
+    transition: transform 0.25s;
+    transform: translateY(-30px);
+}
+
+.modal-box.active .modal {
+    transition: transform 0.25s;
+    transform: none;
+}
+
+.modal-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.modal-header .title {
+    font-size: 1.17em;
+    font-weight: bold;
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: 100%;
 }
 
 .input-box input {
@@ -186,7 +261,7 @@
 
 .emoji {
     font-family: "TossFaceFontMac";
-    font-size: 20pt;
+    font-size: 30px;
 }
 
 .link {
@@ -195,12 +270,6 @@
 }
 
 /* fontface */
-@font-face {
-    font-family: "Pretendard-Regular";
-    src: url("https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff") format("woff");
-    font-weight: 400;
-    font-style: normal;
-}
 
 @font-face {
     font-family: "TossFaceFontMac";

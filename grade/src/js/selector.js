@@ -1,7 +1,9 @@
 /* selector module */
 
+window.__selectors = {};
+
 class Selector {
-    constructor(selectElement, title, options, callback) {
+    constructor(selectElement, title, name, options, callback) {
         if(!selectElement || !title || !options || !callback) throw new Error("Selector: missing argument(s)!");
         this.selectElement = selectElement;
         this.selectElement.innerHTML = "선택";
@@ -12,8 +14,11 @@ class Selector {
             this.setOptions();
         });
         this.title = title;
+        this.name = name;
         this.options = options;
         this.callback = callback;
+
+        if(!window.__selectors[this.name]) window.__selectors[this.name] = [];
     }
 
     activate() {
@@ -31,18 +36,29 @@ class Selector {
     setOptions() {
         document.querySelector("#optionBox").innerHTML = "";
         for(var option of this.options) {
+            if(window.__selectors[this.name].includes(option)) continue;
             var optionElement = document.createElement("div");
             optionElement.setAttribute("class", "option");
             optionElement.innerHTML = option;
             optionElement.addEventListener("click", (event) => {
-                this.value = event.target.innerHTML;
-                this.selectElement.style.color = "#000000";
-                this.selectElement.innerHTML = this.value;
-                this.deactivate();
-                this.callback(this.value)
+                this.selectOption(event.target.innerHTML)
 ;            });
             document.querySelector("#optionBox").appendChild(optionElement);
         }
+    }
+
+    selectOption(value) {
+        this.value = value;
+        this.selectElement.style.color = "#000000";
+        this.selectElement.innerHTML = this.value;
+        this.deactivate();
+        this.callback(this.value);
+
+        window.__selectors[this.name].push(this.value);
+    }
+
+    isAlreadySelected(value) {
+        return window.__selectors[this.name].includes(value);
     }
 }
 

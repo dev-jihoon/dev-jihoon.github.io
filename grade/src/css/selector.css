@@ -1,58 +1,5 @@
-.selector-box {
-    display: none;
-    opacity: 0;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 100;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    opacity: 0;
-    transition: opacity 0.1s;
-}
-
-.selector-box.active {
-    display: block;
-    opacity: 1;
-}
-
-.selector {
-    box-sizing: border-box;
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    width: calc(100% - 20px);
-    max-width: 450px;
-    margin: 0 auto;
-    padding: 20px;
-    border-radius: 15px;
-    background: #fff;
-    animation: slide-up 0.25s ease;
-    transform: translateX(-50%);
-}
-
-.selector-header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.selector-header .title {
-    font-size: 1.17em;
-    font-weight: bold;
-}
-
-.option-box {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-}
-
 .option {
+    width: 100%;
     padding: 10px;
     border: none;
     border-radius: 10px;
@@ -96,4 +43,8 @@
 .select:hover {
     cursor: pointer;
     border-bottom: 2px solid #0062ff;
+}
+
+.select.invalid {
+    border-bottom: 2px solid #ff0000;
 }
