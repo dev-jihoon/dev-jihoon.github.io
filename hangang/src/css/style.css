@@ -1,0 +1,143 @@
+* {
+    font-family: "Pretendard", Helvetica, sans-serif;
+}
+
+body {
+    touch-action: pan-y, pan-x;
+}
+
+body::before {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    filter: brightness(0.5);
+    background: inherit;
+    background-image: url("../images/background.jpg");
+    background-position: center;
+    /* 양옆이 잘리더라도 가로로 꽉 채우고 중앙에 위치 살짝 어둡게 블러 */
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    width: 100%;
+    height: 100%;
+    content: "";
+}
+
+/* layout */
+.container {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    margin: 0 auto;
+    padding: 10px;
+    width: 100%;
+    max-width: 450px;
+    height: 100%;
+    color: #f7f7f7;
+}
+
+div.bottom {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
+    max-width: 430px;
+}
+
+/* button */
+.button {
+    transition: all 0.25s ease;
+    border: none;
+    border-radius: 15px;
+    background: #cce0ff;
+    padding: 15px 25px;
+    width: 100%;
+    color: #005aeb;
+    font-size: 16px;
+    text-align: center;
+    text-decoration: none;
+}
+
+.button.active {
+    background: #0062ff;
+    color: #f7f7f7;
+}
+
+.button:hover {
+    transform: scale(0.95);
+    background: #b8d3ff;
+}
+
+.button.active:hover {
+    background: #005aeb;
+}
+
+.button-text {
+    transition: all 0.25s ease;
+    color: #0062ff;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.button-text:hover {
+    transform: scale(0.95);
+    color: #0052d6;
+}
+
+.button-box {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+}
+
+.button-box .button:first-child {
+    margin-right: 5px;
+}
+
+.button-box .button:last-child {
+    margin-left: 5px;
+}
+
+.button-box.bottom {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 20px);
+    max-width: 430px;
+}
+
+/* text */
+
+.emoji {
+    font-size: 30px;
+    font-family: "TossFaceFontMac";
+}
+
+.link {
+    color: #cce0ff;
+    text-decoration: none;
+}
+
+/* fontface */
+
+@font-face {
+    font-style: normal;
+    font-weight: 700;
+    src: url("../fonts/TossFaceFontMac.ttf") format("truetype");
+    font-family: "TossFaceFontMac";
+}
+
+/* icons */
+
+.icon {
+    display: inline-block;
+    margin: 5px;
+    background: center no-repeat;
+    background-size: cover;
+    width: 25px;
+    height: 25px;
+}

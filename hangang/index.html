@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+        />
+        <meta
+            name="description"
+            content="현재 한강의 수온 정보를 제공합니다."
+        />
+        <meta property="og:url" content="dev-jihoon.github.io" />
+        <meta property="og:title" content="한강수온" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="src/images/meta.png" />
+        <meta
+            property="og:description"
+            content="현재 한강의 수온 정보를 제공합니다."
+        />
+        <title>한강수온</title>
+
+        <link rel="shortcut icon" href="/hangang/src/images/favicon.ico" />
+        <link rel="apple-touch-icon" href="/hangang/src/images/favicon.ico" />
+        <link rel="icon" href="/hangang/src/images/favicon.ico" />
+
+        <link rel="stylesheet" href="/hangang/src/fonts/pretendard.css?v=1" />
+
+        <link rel="stylesheet" href="/hangang/src/css/style.css?v=0" />
+        <script
+            type="module"
+            src="/hangang/src/js/script.js?v=0"
+            defer
+        ></script>
+    </head>
+    <body>
+        <div class="container">
+            <div class="main">
+                <div class="bottom">
+                    <h1 id="temperature"></h1>
+                    <h3 id="description">불러오는 중...</h3>
+                    <p>
+                        개발:
+                        <a class="link" href="https://instagram.com/z1hoon_"
+                            >@z1hoon_</a
+                        >
+                    </p>
+                    <p>
+                        본 사이트는
+                        <a
+                            class="link"
+                            href="https://data.seoul.go.kr/dataList/OA-15488/A/1/datasetView.do"
+                            >서울열린데이터광장</a
+                        >에서 제공하는 정보와
+                        <a
+                            class="link"
+                            href="https://hangang.seoul.go.kr/www/rvrPhoto/detail.do?photoSn=137&mid=490"
+                            >서울시 한강공원 사이트</a
+                        >에서 제공하는 이미지를 사용하였습니다.
+                    </p>
+
+                    <div class="button-box">
+                        <a
+                            class="button active"
+                            href="https://m.map.kakao.com/actions/routeView?exEnc=LWSRTU&eyEnc=QNLMPUP&endLoc=%EB%A7%88%ED%8F%AC%EB%8C%80%EA%B5%90&ids=%2CP7864538"
+                        >
+                            마포대교 길찾기
+                        </a>
+                        <a class="button" href="."> 다시 조회하기 </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
