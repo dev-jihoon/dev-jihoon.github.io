@@ -1,0 +1,50 @@
+.option {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    text-align: left;
+    background: #fff;
+    transition: all 0.25s ease;
+}
+
+.option:hover {
+    background: #f7f7f7;
+    cursor: pointer;
+}
+
+.select {
+    box-sizing: border-box;
+    position: relative;
+    width: 100%;
+    padding: 5px;
+    border: none;
+    border-bottom: 2px solid #c8c8c8;
+    font-size: 11pt;
+    text-align: left;
+    text-decoration: none;
+    color: #000;
+    background: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.select::before {
+    content: url(../icons/expand.svg);
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    top: 50%;
+    right: 5px;
+    pointer-events: none;
+    transform: translateY(-50%);
+}
+
+.select:hover {
+    cursor: pointer;
+    border-bottom: 2px solid #0062ff;
+}
+
+.select.invalid {
+    border-bottom: 2px solid #ff0000;
+}
