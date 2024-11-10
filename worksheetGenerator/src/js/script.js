@@ -34,208 +34,199 @@ function convertDocxToPdf(base64) {
         });
 }
 
-function generateWorksheet(title, content, translation, levels) {
+function generateWorksheet(title, content, translation, level) {
     var sentences = content.split("\n").map((sentence) => sentence.trim());
     var translatedSentences = translation.split("\n").map((sentence) => sentence.trim());
 
-    var pdfs = [];
-    for (const level of levels) {
-        const levelValue = LEVELS[level];
-        docx.patchDocument({
-            outputType: "base64",
-            data: readFile("/worksheetGenerator/assets/template.docx"),
-            patches: {
-                title: {
-                    type: docx.PatchType.PARAGRAPH,
-                    children: [new docx.TextRun(title)],
-                    style: "WorkSheetTitle",
-                },
-                level: {
-                    type: docx.PatchType.PARAGRAPH,
-                    children: [new docx.TextRun(level)],
-                    style: "WorkSheetLevel",
-                },
-                table: {
-                    type: docx.PatchType.DOCUMENT,
-                    children: [
-                        new docx.Table({
-                            width: {
-                                size: 100,
-                                type: docx.WidthType.PERCENTAGE,
-                            },
-                            rows: sentences.map((sentence, index) => {
-                                var words = sentence.split(" ");
-                                if (level === "Expert") {
-                                    words.map((word) => "__________");
-                                } else {
-                                    var hideWordIndex = [];
-                                    for (let i = 0; i < words.length; i++) {
-                                        if (!["A", "An", "The"].includes(words[i])) {
-                                            hideWordIndex.push(i);
-                                        }
-                                    }
-                                    shuffle(hideWordIndex);
-                                    hideWordIndex.slice(0, Math.floor(hideWordIndex.length * levelValue)).forEach((index) => {
-                                        words[index] = "__________";
-                                    });
-                                }
-                                sentence = words.join(" ");
-                                if (translation) {
-                                    return new docx.TableRow({
-                                        children: [
-                                            new docx.TableCell({
-                                                width: {
-                                                    size: 7.5,
-                                                    type: docx.WidthType.PERCENTAGE,
-                                                },
-                                                borders: {
-                                                    top: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                    bottom: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                    left: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                    right: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                },
-                                                margins: {
-                                                    top: docx.convertInchesToTwip(0.1),
-                                                    bottom: docx.convertInchesToTwip(0.1),
-                                                    left: docx.convertInchesToTwip(0.1),
-                                                    right: docx.convertInchesToTwip(0.1),
-                                                },
-                                                verticalAlign: docx.VerticalAlign.CENTER,
-                                                children: [
-                                                    new docx.Paragraph({
-                                                        children: [new docx.TextRun((index + 1).toString().padStart(2, "0"))],
-                                                        style: "WorkSheetIndex",
-                                                    }),
-                                                ],
-                                            }),
-                                            new docx.TableCell({
-                                                width: {
-                                                    size: 60,
-                                                    type: docx.WidthType.PERCENTAGE,
-                                                },
-                                                borders: {
-                                                    top: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                    bottom: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                    left: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                    right: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                },
-                                                margins: {
-                                                    top: docx.convertInchesToTwip(0.1),
-                                                    bottom: docx.convertInchesToTwip(0.1),
-                                                    left: docx.convertInchesToTwip(0.1),
-                                                    right: docx.convertInchesToTwip(0.1),
-                                                },
-                                                verticalAlign: docx.VerticalAlign.CENTER,
-                                                children: [
-                                                    new docx.Paragraph({
-                                                        children: [new docx.TextRun(sentence)],
-                                                        style: "WorkSheetContent",
-                                                    }),
-                                                ],
-                                            }),
-                                            new docx.TableCell({
-                                                width: {
-                                                    size: 32.5,
-                                                    type: docx.WidthType.PERCENTAGE,
-                                                },
-                                                borders: {
-                                                    top: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                    bottom: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                    left: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                    right: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                },
-                                                margins: {
-                                                    top: docx.convertInchesToTwip(0.1),
-                                                    bottom: docx.convertInchesToTwip(0.1),
-                                                    left: docx.convertInchesToTwip(0.1),
-                                                    right: docx.convertInchesToTwip(0.1),
-                                                },
-                                                verticalAlign: docx.VerticalAlign.CENTER,
-                                                children: [
-                                                    new docx.Paragraph({
-                                                        children: [new docx.TextRun(translatedSentences[index])],
-                                                        style: "WorkSheetTranslated",
-                                                    }),
-                                                ],
-                                            }),
-                                        ],
-                                    });
-                                } else {
-                                    return new docx.TableRow({
-                                        children: [
-                                            new docx.TableCell({
-                                                width: {
-                                                    size: 7.5,
-                                                    type: docx.WidthType.PERCENTAGE,
-                                                },
-                                                borders: {
-                                                    top: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                    bottom: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                    left: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                    right: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                },
-                                                margins: {
-                                                    top: docx.convertInchesToTwip(0.1),
-                                                    bottom: docx.convertInchesToTwip(0.1),
-                                                    left: docx.convertInchesToTwip(0.1),
-                                                    right: docx.convertInchesToTwip(0.1),
-                                                },
-                                                verticalAlign: docx.VerticalAlign.CENTER,
-                                                children: [
-                                                    new docx.Paragraph({
-                                                        children: [new docx.TextRun((index + 1).toString().padStart(2, "0"))],
-                                                        style: "WorkSheetIndex",
-                                                    }),
-                                                ],
-                                            }),
-                                            new docx.TableCell({
-                                                width: {
-                                                    size: 92.5,
-                                                    type: docx.WidthType.PERCENTAGE,
-                                                },
-                                                borders: {
-                                                    top: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                    bottom: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                    left: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                    right: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
-                                                },
-                                                margins: {
-                                                    top: docx.convertInchesToTwip(0.1),
-                                                    bottom: docx.convertInchesToTwip(0.1),
-                                                    left: docx.convertInchesToTwip(0.1),
-                                                    right: docx.convertInchesToTwip(0.1),
-                                                },
-                                                verticalAlign: docx.VerticalAlign.CENTER,
-                                                children: [
-                                                    new docx.Paragraph({
-                                                        children: [new docx.TextRun(sentence)],
-                                                        style: "WorkSheetContent",
-                                                    }),
-                                                ],
-                                            }),
-                                        ],
-                                    });
-                                }
-                            }),
-                        }),
-                    ],
-                },
+    const levelValue = LEVELS[level];
+    return docx.patchDocument({
+        outputType: "base64",
+        data: readFile("/worksheetGenerator/assets/template.docx"),
+        patches: {
+            title: {
+                type: docx.PatchType.PARAGRAPH,
+                children: [new docx.TextRun(title)],
+                style: "WorkSheetTitle",
             },
-        })
-            .then((base64) => {
-                window.base64 = base64;
-                return convertDocxToPdf(base64);
-            })
-            .then((pdf) => {
-                saveAs("data:application/pdf;base64," + pdf, `${title} - ${level}.pdf`);
-            });
-    }
+            level: {
+                type: docx.PatchType.PARAGRAPH,
+                children: [new docx.TextRun(level)],
+                style: "WorkSheetLevel",
+            },
+            table: {
+                type: docx.PatchType.DOCUMENT,
+                children: [
+                    new docx.Table({
+                        width: {
+                            size: 100,
+                            type: docx.WidthType.PERCENTAGE,
+                        },
+                        rows: sentences.map((sentence, index) => {
+                            var words = sentence.split(" ");
+                            if (level === "Expert") {
+                                words.map((word) => "__________");
+                            } else {
+                                var hideWordIndex = [];
+                                for (let i = 0; i < words.length; i++) {
+                                    if (!["A", "An", "The"].includes(words[i])) {
+                                        hideWordIndex.push(i);
+                                    }
+                                }
+                                shuffle(hideWordIndex);
+                                hideWordIndex.slice(0, Math.floor(hideWordIndex.length * levelValue)).forEach((index) => {
+                                    words[index] = "__________";
+                                });
+                            }
+                            sentence = words.join(" ");
+                            if (translation) {
+                                return new docx.TableRow({
+                                    children: [
+                                        new docx.TableCell({
+                                            width: {
+                                                size: 7.5,
+                                                type: docx.WidthType.PERCENTAGE,
+                                            },
+                                            borders: {
+                                                top: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                                bottom: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                                left: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                                right: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                            },
+                                            margins: {
+                                                top: docx.convertInchesToTwip(0.1),
+                                                bottom: docx.convertInchesToTwip(0.1),
+                                                left: docx.convertInchesToTwip(0.1),
+                                                right: docx.convertInchesToTwip(0.1),
+                                            },
+                                            verticalAlign: docx.VerticalAlign.CENTER,
+                                            children: [
+                                                new docx.Paragraph({
+                                                    children: [new docx.TextRun((index + 1).toString().padStart(2, "0"))],
+                                                    style: "WorkSheetIndex",
+                                                }),
+                                            ],
+                                        }),
+                                        new docx.TableCell({
+                                            width: {
+                                                size: 60,
+                                                type: docx.WidthType.PERCENTAGE,
+                                            },
+                                            borders: {
+                                                top: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                                bottom: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                                left: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                                right: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                            },
+                                            margins: {
+                                                top: docx.convertInchesToTwip(0.1),
+                                                bottom: docx.convertInchesToTwip(0.1),
+                                                left: docx.convertInchesToTwip(0.1),
+                                                right: docx.convertInchesToTwip(0.1),
+                                            },
+                                            verticalAlign: docx.VerticalAlign.CENTER,
+                                            children: [
+                                                new docx.Paragraph({
+                                                    children: [new docx.TextRun(sentence)],
+                                                    style: "WorkSheetContent",
+                                                }),
+                                            ],
+                                        }),
+                                        new docx.TableCell({
+                                            width: {
+                                                size: 32.5,
+                                                type: docx.WidthType.PERCENTAGE,
+                                            },
+                                            borders: {
+                                                top: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                                bottom: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                                left: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                                right: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                            },
+                                            margins: {
+                                                top: docx.convertInchesToTwip(0.1),
+                                                bottom: docx.convertInchesToTwip(0.1),
+                                                left: docx.convertInchesToTwip(0.1),
+                                                right: docx.convertInchesToTwip(0.1),
+                                            },
+                                            verticalAlign: docx.VerticalAlign.CENTER,
+                                            children: [
+                                                new docx.Paragraph({
+                                                    children: [new docx.TextRun(translatedSentences[index])],
+                                                    style: "WorkSheetTranslated",
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                });
+                            } else {
+                                return new docx.TableRow({
+                                    children: [
+                                        new docx.TableCell({
+                                            width: {
+                                                size: 7.5,
+                                                type: docx.WidthType.PERCENTAGE,
+                                            },
+                                            borders: {
+                                                top: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                                bottom: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                                left: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                                right: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                            },
+                                            margins: {
+                                                top: docx.convertInchesToTwip(0.1),
+                                                bottom: docx.convertInchesToTwip(0.1),
+                                                left: docx.convertInchesToTwip(0.1),
+                                                right: docx.convertInchesToTwip(0.1),
+                                            },
+                                            verticalAlign: docx.VerticalAlign.CENTER,
+                                            children: [
+                                                new docx.Paragraph({
+                                                    children: [new docx.TextRun((index + 1).toString().padStart(2, "0"))],
+                                                    style: "WorkSheetIndex",
+                                                }),
+                                            ],
+                                        }),
+                                        new docx.TableCell({
+                                            width: {
+                                                size: 92.5,
+                                                type: docx.WidthType.PERCENTAGE,
+                                            },
+                                            borders: {
+                                                top: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                                bottom: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                                left: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                                right: { style: docx.BorderStyle.SINGLE, size: 1, color: "ffffff" },
+                                            },
+                                            margins: {
+                                                top: docx.convertInchesToTwip(0.1),
+                                                bottom: docx.convertInchesToTwip(0.1),
+                                                left: docx.convertInchesToTwip(0.1),
+                                                right: docx.convertInchesToTwip(0.1),
+                                            },
+                                            verticalAlign: docx.VerticalAlign.CENTER,
+                                            children: [
+                                                new docx.Paragraph({
+                                                    children: [new docx.TextRun(sentence)],
+                                                    style: "WorkSheetContent",
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                });
+                            }
+                        }),
+                    }),
+                ],
+            },
+        },
+    });
 }
 
-function exportWorksheet() {
+function exportWorksheetDocx() {
     var title = titleInputElement.value;
     var content = contentInputElement.value;
     var translation = translationInputElement.value;
+    var level = levelSelector.value;
     if (title === "") {
         titleInputElement.focus();
         titleInputElement.classList.add("invalid");
@@ -244,12 +235,42 @@ function exportWorksheet() {
         contentInputElement.focus();
         contentInputElement.classList.add("invalid");
         alert("본문을 입력해주세요.");
-    } else if (!levelSelector.value) {
+    } else if (!level) {
         levelSelectorElement.focus();
         levelSelectorElement.classList.add("invalid");
         alert("난이도를 선택해주세요.");
     } else {
-        generateWorksheet(title, content, translation, [levelSelector.value]);
+        generateWorksheet(title, content, translation, level).then((base64) => {
+            saveAs("data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64," + base64, `${title} (${level}).docx`);
+        });
+    }
+}
+
+function exportWorksheetPDF() {
+    var title = titleInputElement.value;
+    var content = contentInputElement.value;
+    var translation = translationInputElement.value;
+    var level = levelSelector.value;
+    if (title === "") {
+        titleInputElement.focus();
+        titleInputElement.classList.add("invalid");
+        alert("제목을 입력해주세요.");
+    } else if (content === "") {
+        contentInputElement.focus();
+        contentInputElement.classList.add("invalid");
+        alert("본문을 입력해주세요.");
+    } else if (!level) {
+        levelSelectorElement.focus();
+        levelSelectorElement.classList.add("invalid");
+        alert("난이도를 선택해주세요.");
+    } else {
+        generateWorksheet(title, content, translation, level)
+            .then((base64) => {
+                return convertDocxToPdf(base64);
+            })
+            .then((pdf) => {
+                saveAs("data:application/pdf;base64," + pdf, `${title} (${level}).pdf`);
+            });
     }
 }
 
@@ -261,7 +282,8 @@ function textAreaResize(textarea) {
 const titleInputElement = document.querySelector("#titleInput");
 const contentInputElement = document.querySelector("#contentInput");
 const translationInputElement = document.querySelector("#translationInput");
-const exportButtonElement = document.querySelector("#exportButton");
+const exportDocxButtonElement = document.querySelector("#exportDocxButton");
+const exportPDFButtonElement = document.querySelector("#exportPDFButton");
 const presetSelectorElement = document.querySelector("#loadPresetButton");
 const levelSelectorElement = document.querySelector("#levelSelector");
 
@@ -273,7 +295,8 @@ translationInputElement.addEventListener("input", (event) => {
     textAreaResize(event.target);
 });
 
-exportButtonElement.addEventListener("click", exportWorksheet);
+exportDocxButtonElement.addEventListener("click", exportWorksheetDocx);
+exportPDFButtonElement.addEventListener("click", exportWorksheetPDF);
 
 var presetSelector = new Selector(presetSelectorElement, "Select Preset", "preset", PRESETS, false, true, async (value) => {
     var content = await fetch(`/worksheetGenerator/presets/${value}.txt`).then((response) => response.text());
