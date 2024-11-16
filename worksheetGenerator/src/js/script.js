@@ -1,7 +1,7 @@
 import Selector from "./selector.js";
 
 const LEVELS = { Basic: 0.3, Intermediate: 0.5, Advanced: 0.7, Expert: 1.0, Answer: 0.0 };
-const PRESETS = ["Tales of Birbal", "Aesop's Fables - The Greedy Dog"];
+const PRESETS = { "Tales of Birbal": 1, "Extra Reading 1 - Aesop's Fables": 0, "Extra Reading 2 - Spilling the Beans": 0, "Extra Reading 3 - Break a Leg!": 0 };
 function readFile(url) {
     return fetch(url).then((response) => response.arrayBuffer());
 }
@@ -64,7 +64,7 @@ function generateWorksheet(title, content, translation, level) {
                         rows: sentences.map((sentence, index) => {
                             var words = sentence.split(" ");
                             if (level === "Expert") {
-                                words.map((word) => "__________");
+                                words = words.map((word) => "__________");
                             } else {
                                 var hideWordIndex = [];
                                 for (let i = 0; i < words.length; i++) {
@@ -298,9 +298,14 @@ translationInputElement.addEventListener("input", (event) => {
 exportDocxButtonElement.addEventListener("click", exportWorksheetDocx);
 exportPDFButtonElement.addEventListener("click", exportWorksheetPDF);
 
-var presetSelector = new Selector(presetSelectorElement, "Select Preset", "preset", PRESETS, false, true, async (value) => {
+var presetSelector = new Selector(presetSelectorElement, "Select Preset", "preset", Object.keys(PRESETS), false, true, async (value) => {
     var content = await fetch(`/worksheetGenerator/presets/${value}.txt`).then((response) => response.text());
-    var translation = await fetch(`/worksheetGenerator/presets/${value}.kr.txt`).then((response) => response.text());
+    var translation;
+    if (PRESETS[value]) {
+        translation = await fetch(`/worksheetGenerator/presets/${value}.kr.txt`).then((response) => response.text());
+    } else {
+        translation = "";
+    }
     titleInputElement.value = value;
     contentInputElement.value = content;
     translationInputElement.value = translation;
