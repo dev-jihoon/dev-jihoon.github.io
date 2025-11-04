@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>지필평가 D-Day</title>
+    <link rel="stylesheet" href="src/style.css" />
+  </head>
+  <body>
+    <main>
+      <h1>지필평가 D-Day</h1>
+      <section class="target-info">
+        <p class="target-label">목표일</p>
+        <p id="target-date" class="target-date">2025년 12월 11일 목요일 00:00</p>
+      </section>
+      <section class="countdown">
+        <p id="dday-label" class="dday-label">D-0</p>
+        <p id="time-left" class="time-left">00시간 00분 00초</p>
+      </section>
+      <section class="controls">
+        <label for="target-input" class="input-label">직접 날짜/시간 설정</label>
+        <input
+          id="target-input"
+          type="datetime-local"
+          class="target-input"
+          value="2025-12-11T00:00"
+        />
+        <button id="apply-target" class="apply-button">디데이 설정</button>
+      </section>
+    </main>
+    <script src="src/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+        <meta name="description" content="영어 지문의 원문을 찾아주는 서비스입니다." />
+        <meta property="og:url" content="dev-jihoon.github.io" />
+        <meta property="og:title" content="Reference Finder" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="src/images/meta.png" />
+        <meta property="og:description" content="영어 지문의 원문을 찾아주는 서비스입니다." />
+        <title>Reference Finder</title>
+
+        <link rel="shortcut icon" href="/referenceFinder/src/images/favicon.ico" />
+        <link rel="apple-touch-icon" href="/referenceFinder/src/images/favicon.ico" />
+        <link rel="icon" href="/referenceFinder/src/images/favicon.ico" />
+
+        <link rel="stylesheet" href="/referenceFinder/src/fonts/pretendard.css?v=1" />
+
+        <script type="module" src="https://unpkg.com/docx"></script>
+        <script
+            type="module"
+            src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.js"
+            integrity="sha512-UNbeFrHORGTzMn3HTt00fvdojBYHLPxJbLChmtoyDwB6P9hX5mah3kMKm0HHNx/EvSPJt14b+SlD8xhuZ4w9Lg=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        ></script>
+
+        <link rel="stylesheet" href="/referenceFinder/src/css/selector.css?v=1" />
+
+        <link rel="stylesheet" href="/referenceFinder/src/css/style.css?v=1" />
+        <script type="module" src="/referenceFinder/src/js/script.js?v=3" defer></script>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Reference Finder</h1>
+                <p>영어 지문의 원문을 찾아주는 서비스입니다.</p>
+                <p>
+                    개발:
+                    <a class="link" href="https://instagram.com/z1hoon_">@z1hoon_</a>
+                </p>
+            </div>
+            <div class="main">
+                <div class="search-container" role="region" aria-label="검색">
+                    <form class="search-form" action="https://www.google.com/search" method="get" target="_blank">
+                        <input class="search-input" type="search" name="q" placeholder="검색어를 입력하세요" aria-label="검색어 입력" />
+                        <button class="search-button" type="submit" aria-label="검색">
+                            <img src="/referenceFinder/src/icons/search.svg" alt="검색" />
+                        </button>
+                    </form>
+                </div>
+                <!-- search results will be rendered here -->
+                <div id="results" class="results" aria-live="polite"></div>
+
+                <!-- Book detail modal -->
+                <div id="bookModal" class="modal-box" role="dialog" aria-modal="true" aria-hidden="true">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h2 class="title">Details</h2>
+                            <button id="bookModalClose" class="modal-close" aria-label="닫기">✕</button>
+                        </div>
+                        <div class="modal-content" id="bookModalContent">
+                            <div class="modal-body">
+                                <img id="bookModalImage" src="" alt="책 이미지" class="modal-thumb" />
+                                <div class="modal-meta">
+                                    <div id="bookModalBookTitle" class="modal-book-title"></div>
+                                    <div id="bookModalAuthors" class="modal-authors"></div>
+                                    <div id="bookModalYear" class="modal-year"></div>
+                                    <div id="bookModalSnippet" class="modal-snippet"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
