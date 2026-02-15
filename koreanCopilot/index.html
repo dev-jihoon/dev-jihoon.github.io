@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+        />
+        <meta
+            name="description"
+            content="한국형 인라인 글쓰기 코파일럿 서비스입니다."
+        />
+        <meta property="og:url" content="dev-jihoon.github.io" />
+        <meta property="og:title" content="K-Inline Copilot" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="src/images/meta.png" />
+        <meta
+            property="og:description"
+            content="Tab으로 쓰고 Space 두 번으로 완성하는 AI 글쓰기"
+        />
+        <title>K-Inline Copilot</title>
+
+        <link
+            rel="shortcut icon"
+            href="/koreanCopilot/src/images/favicon.ico"
+        />
+        <link
+            rel="stylesheet"
+            href="/koreanCopilot/src/fonts/pretendard.css?v=1"
+        />
+        <link rel="stylesheet" href="/koreanCopilot/src/css/selector.css?v=1" />
+        <link rel="stylesheet" href="/koreanCopilot/src/css/style.css?v=1" />
+
+        <script
+            type="module"
+            src="/koreanCopilot/src/js/script.js?v=3"
+            defer
+        ></script>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>K-Inline Copilot</h1>
+                <div class="toggle-wrapper">
+                    AI 활성화
+                    <label class="switch">
+                        <input type="checkbox" id="aiToggle" checked />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="main-card">
+                <div class="editor-wrapper">
+                    <div id="ghost-layer"></div>
+                    <textarea
+                        id="editor"
+                        spellcheck="false"
+                        placeholder="이곳에 글 작성을 시작하세요..."
+                    ></textarea>
+                </div>
+
+                <div class="controls">
+                    <span id="statusText">준비 완료</span>
+                    <button id="copyBtn" class="btn-copy">복사하기</button>
+                </div>
+            </div>
+
+            <div class="guide-text">
+                <b>Tab</b>(PC) 또는 <b>Enter</b>로 문장을 완성하세요.<br />
+                작성을 멈추고 1.5초 후 제안이 생성됩니다.
+            </div>
+        </div>
+    </body>
+</html>
