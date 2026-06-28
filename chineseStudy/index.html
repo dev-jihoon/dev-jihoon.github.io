@@ -1,0 +1,1572 @@
+<!doctype html>
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>한백고2 중국어 기말고사 단어</title>
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap");
+            :root {
+                --bg: #0f0f13;
+                --surface: #1a1a22;
+                --surface2: #22222e;
+                --border: #2e2e3e;
+                --accent: #7c6dfa;
+                --accent2: #a594fc;
+                --correct: #34c77b;
+                --wrong: #ff4f5a;
+                --warn: #f5a623;
+                --text: #e8e8f0;
+                --text2: #9090a8;
+                --hanzi: "Noto Serif SC", "KaiTi", "STKaiti", "楷体", serif;
+                --ui: "Noto Sans KR", sans-serif;
+            }
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            body {
+                background: var(--bg);
+                color: var(--text);
+                font-family: var(--ui);
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+
+            /* 설정 */
+            #s-setup {
+                width: 100%;
+                max-width: 520px;
+                padding: 40px 24px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 28px;
+            }
+            .logo-main {
+                font-family: var(--hanzi);
+                font-size: 48px;
+                color: var(--accent2);
+                letter-spacing: 8px;
+                text-align: center;
+            }
+            .logo-sub {
+                font-size: 12px;
+                color: var(--text2);
+                margin-top: 6px;
+                letter-spacing: 2px;
+                text-align: center;
+            }
+            .sec-title {
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 3px;
+                color: var(--text2);
+                text-transform: uppercase;
+                width: 100%;
+            }
+            .mode-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                width: 100%;
+            }
+            .mode-btn {
+                background: var(--surface);
+                border: 1.5px solid var(--border);
+                border-radius: 12px;
+                padding: 16px;
+                cursor: pointer;
+                text-align: left;
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+                transition: all 0.15s;
+            }
+            .mode-btn:hover {
+                border-color: var(--accent);
+                background: var(--surface2);
+            }
+            .mode-btn.sel {
+                border-color: var(--accent);
+                background: #2a2240;
+            }
+            .mode-btn .mi {
+                font-size: 18px;
+            }
+            .mode-btn .ml {
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--text);
+            }
+            .mode-btn .md {
+                font-size: 11px;
+                color: var(--text2);
+                line-height: 1.5;
+            }
+            .toggle {
+                display: flex;
+                width: 100%;
+                border-radius: 10px;
+                overflow: hidden;
+                border: 1.5px solid var(--border);
+            }
+            .toggle button {
+                flex: 1;
+                padding: 11px;
+                background: var(--surface);
+                border: none;
+                color: var(--text2);
+                font-family: var(--ui);
+                font-size: 13px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.15s;
+            }
+            .toggle button.act {
+                background: var(--accent);
+                color: #fff;
+            }
+
+            /* 문항 수 선택 그리드 */
+            .count-grid {
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 6px;
+                width: 100%;
+            }
+            .count-grid button {
+                padding: 10px 0;
+                background: var(--surface);
+                border: 1.5px solid var(--border);
+                border-radius: 8px;
+                color: var(--text2);
+                font-family: var(--ui);
+                font-size: 12px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.15s;
+            }
+            .count-grid button.act {
+                background: var(--accent);
+                border-color: var(--accent);
+                color: #fff;
+            }
+
+            .start-btn {
+                width: 100%;
+                padding: 15px;
+                background: var(--accent);
+                color: #fff;
+                border: none;
+                border-radius: 12px;
+                font-family: var(--ui);
+                font-size: 16px;
+                font-weight: 700;
+                cursor: pointer;
+                letter-spacing: 1px;
+                transition: all 0.15s;
+            }
+            .start-btn:hover {
+                background: var(--accent2);
+                transform: translateY(-1px);
+            }
+            .start-btn:disabled {
+                opacity: 0.4;
+                cursor: default;
+                transform: none;
+            }
+
+            /* 퀴즈 */
+            #s-quiz {
+                width: 100%;
+                max-width: 640px;
+                padding: 24px 20px 48px;
+                display: none;
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+                min-height: 100vh;
+            }
+            .q-header {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                gap: 14px;
+            }
+            .back-btn {
+                background: none;
+                border: none;
+                color: var(--text2);
+                font-size: 20px;
+                cursor: pointer;
+                padding: 4px 8px;
+                border-radius: 6px;
+            }
+            .back-btn:hover {
+                color: var(--text);
+            }
+            .prog-wrap {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .prog-bg {
+                flex: 1;
+                height: 4px;
+                background: var(--border);
+                border-radius: 2px;
+                overflow: hidden;
+            }
+            .prog-fill {
+                height: 100%;
+                background: var(--accent);
+                border-radius: 2px;
+                transition: width 0.3s;
+            }
+            .prog-txt {
+                font-size: 12px;
+                color: var(--text2);
+                white-space: nowrap;
+            }
+            .score {
+                font-size: 12px;
+                color: var(--correct);
+                font-weight: 700;
+            }
+
+            /* 카드 */
+            .card {
+                width: 100%;
+                background: var(--surface);
+                border: 1.5px solid var(--border);
+                border-radius: 20px;
+                padding: 36px 28px 28px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                min-height: 200px;
+                position: relative;
+                transition:
+                    border-color 0.2s,
+                    box-shadow 0.2s;
+            }
+            .card.ok {
+                border-color: var(--correct);
+                box-shadow: 0 0 0 3px rgba(52, 199, 123, 0.18);
+            }
+            .card.ng {
+                border-color: var(--wrong);
+                box-shadow: 0 0 0 3px rgba(255, 79, 90, 0.18);
+            }
+            .card-lbl {
+                font-size: 10px;
+                letter-spacing: 3px;
+                color: var(--text2);
+                font-weight: 700;
+                text-transform: uppercase;
+            }
+            .card-prompt {
+                font-size: 50px;
+                font-family: var(--hanzi);
+                color: var(--text);
+                line-height: 1.2;
+                word-break: break-all;
+            }
+            .card-prompt.py {
+                font-family: var(--ui);
+                font-size: 36px;
+                font-weight: 300;
+                letter-spacing: 2px;
+                color: var(--accent2);
+            }
+            .card-prompt.ko {
+                font-family: var(--ui);
+                font-size: 32px;
+                font-weight: 400;
+            }
+            .hint-text {
+                font-size: 13px;
+                color: var(--warn);
+                font-style: italic;
+                display: none;
+            }
+            .hint-btn {
+                font-size: 12px;
+                color: var(--text2);
+                position: absolute;
+                bottom: 14px;
+                right: 18px;
+                cursor: pointer;
+                border: none;
+                background: none;
+                font-family: var(--ui);
+            }
+            .hint-btn:hover {
+                color: var(--accent2);
+            }
+            .rt-badge {
+                position: absolute;
+                top: 14px;
+                right: 18px;
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 1px;
+                padding: 3px 10px;
+                border-radius: 20px;
+                opacity: 0;
+                transition: opacity 0.12s;
+                pointer-events: none;
+            }
+            .rt-badge.ok {
+                opacity: 1;
+                background: rgba(52, 199, 123, 0.18);
+                color: var(--correct);
+            }
+            .rt-badge.ng {
+                opacity: 1;
+                background: rgba(255, 79, 90, 0.15);
+                color: var(--wrong);
+            }
+
+            /* 입력 */
+            .input-area {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            .py-preview {
+                min-height: 32px;
+                font-size: 20px;
+                color: var(--accent2);
+                font-weight: 300;
+                letter-spacing: 1px;
+                padding: 0 4px;
+                display: none;
+            }
+            #ans {
+                width: 100%;
+                background: var(--surface2);
+                border: 1.5px solid var(--border);
+                border-radius: 12px;
+                padding: 15px 18px;
+                color: var(--text);
+                font-family: var(--ui);
+                font-size: 17px;
+                outline: none;
+                transition:
+                    border-color 0.15s,
+                    box-shadow 0.15s,
+                    color 0.15s;
+                caret-color: var(--accent);
+            }
+            #ans:focus {
+                border-color: var(--accent);
+            }
+            #ans::placeholder {
+                color: var(--text2);
+                font-size: 14px;
+            }
+            #ans.st-ok {
+                border-color: var(--correct);
+                box-shadow: 0 0 0 3px rgba(52, 199, 123, 0.13);
+                color: var(--correct);
+            }
+            #ans.st-ng {
+                border-color: var(--wrong);
+                box-shadow: 0 0 0 3px rgba(255, 79, 90, 0.13);
+            }
+            .py-guide {
+                font-size: 11px;
+                color: var(--text2);
+                padding: 8px 12px;
+                background: var(--surface2);
+                border-radius: 8px;
+                border-left: 3px solid var(--accent);
+                line-height: 1.9;
+                display: none;
+            }
+            .py-guide strong {
+                color: var(--accent2);
+            }
+            .sub-btn {
+                width: 100%;
+                padding: 15px;
+                border: none;
+                border-radius: 12px;
+                font-family: var(--ui);
+                font-size: 15px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.15s;
+                letter-spacing: 0.5px;
+            }
+            .sub-btn.normal {
+                background: var(--accent);
+                color: #fff;
+            }
+            .sub-btn.normal:hover {
+                background: var(--accent2);
+            }
+            .sub-btn.next {
+                background: var(--surface2);
+                border: 1.5px solid var(--border);
+                color: var(--text);
+            }
+            .sub-btn.next:hover {
+                border-color: var(--accent);
+                color: var(--accent2);
+            }
+            .sub-btn.check-wrong {
+                background: rgba(255, 79, 90, 0.12);
+                border: 1.5px solid var(--wrong);
+                color: var(--wrong);
+            }
+            .sub-btn.check-wrong:hover {
+                background: rgba(255, 79, 90, 0.22);
+            }
+
+            /* 결과 */
+            .result-row {
+                display: none;
+                flex-direction: column;
+                gap: 6px;
+                width: 100%;
+            }
+            .result-lbl {
+                font-size: 11px;
+                letter-spacing: 2px;
+                font-weight: 700;
+            }
+            .result-lbl.ok {
+                color: var(--correct);
+            }
+            .result-lbl.ng {
+                color: var(--wrong);
+            }
+            .result-ans {
+                font-size: 19px;
+                color: var(--text);
+                font-weight: 500;
+                line-height: 1.6;
+            }
+            .result-ans .hz {
+                font-family: var(--hanzi);
+            }
+            .result-ans .py {
+                color: var(--accent2);
+            }
+
+            /* 완료 및 요약 화면 추가 스타일 */
+            #s-done {
+                display: none;
+                flex-direction: column;
+                align-items: center;
+                gap: 22px;
+                padding: 40px 20px;
+                width: 100%;
+                max-width: 560px;
+                text-align: center;
+            }
+            .done-emoji {
+                font-size: 60px;
+            }
+            .done-title {
+                font-size: 26px;
+                font-weight: 700;
+            }
+            .done-stats {
+                font-size: 14px;
+                color: var(--text2);
+                line-height: 2.2;
+            }
+            .done-stats span {
+                color: var(--text);
+                font-weight: 700;
+            }
+            .retry-btn {
+                padding: 13px 40px;
+                background: var(--accent);
+                color: #fff;
+                border: none;
+                border-radius: 12px;
+                font-family: var(--ui);
+                font-size: 15px;
+                font-weight: 700;
+                cursor: pointer;
+                width: 100%;
+                max-width: 240px;
+            }
+            .retry-btn:hover {
+                background: var(--accent2);
+            }
+
+            .summary-container {
+                width: 100%;
+                background: var(--surface);
+                border: 1.5px solid var(--border);
+                border-radius: 16px;
+                padding: 20px;
+                margin-top: 10px;
+                text-align: left;
+                max-height: 380px;
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+            .summary-item {
+                padding: 12px;
+                background: var(--surface2);
+                border-radius: 10px;
+                border-left: 4px solid var(--border);
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+            .summary-item.is-correct {
+                border-left-color: var(--correct);
+            }
+            .summary-item.is-wrong {
+                border-left-color: var(--wrong);
+            }
+            .sum-q-line {
+                font-size: 14px;
+                font-weight: 500;
+            }
+            .sum-q-line .hz {
+                font-family: var(--hanzi);
+                font-weight: bold;
+                color: var(--text);
+            }
+            .sum-q-line .py {
+                color: var(--accent2);
+                font-size: 13px;
+                margin-left: 4px;
+            }
+            .sum-q-line .m {
+                color: var(--text2);
+                font-size: 13px;
+                margin-left: 6px;
+            }
+            .sum-ans-compare {
+                font-size: 12px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                margin-top: 2px;
+            }
+            .sum-user-ans {
+                color: var(--text2);
+            }
+            .summary-item.is-wrong .sum-user-ans span {
+                color: var(--wrong);
+                text-decoration: line-through;
+            }
+            .summary-item.is-correct .sum-user-ans span {
+                color: var(--correct);
+            }
+            .sum-correct-ans {
+                color: var(--correct);
+                font-weight: 500;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="s-setup">
+            <div>
+                <div class="logo-main">汉语</div>
+                <div class="logo-sub">한백고2 중국어 기말고사 단어</div>
+            </div>
+            <div
+                style="
+                    width: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                "
+            >
+                <div class="sec-title">학습 모드</div>
+                <div class="mode-grid">
+                    <button
+                        class="mode-btn"
+                        data-mode="hanzi-meaning"
+                        onclick="selMode(this)"
+                    >
+                        <div class="mi">汉→뜻</div>
+                        <div class="ml">간화자 → 뜻</div>
+                        <div class="md">간화자를 보고<br />한글 뜻 입력</div>
+                    </button>
+                    <button
+                        class="mode-btn"
+                        data-mode="hanzi-pinyin"
+                        onclick="selMode(this)"
+                    >
+                        <div class="mi">汉→音</div>
+                        <div class="ml">간화자 → 병음</div>
+                        <div class="md">간화자를 보고<br />한어병음 입력</div>
+                    </button>
+                    <button
+                        class="mode-btn"
+                        data-mode="pinyin-meaning"
+                        onclick="selMode(this)"
+                    >
+                        <div class="mi">音→뜻</div>
+                        <div class="ml">병음 → 뜻</div>
+                        <div class="md">한어병음을 보고<br />한글 뜻 입력</div>
+                    </button>
+                    <button
+                        class="mode-btn"
+                        data-mode="meaning-pinyin"
+                        onclick="selMode(this)"
+                    >
+                        <div class="mi">뜻→音</div>
+                        <div class="ml">뜻 → 병음</div>
+                        <div class="md">한글 뜻을 보고<br />한어병음 입력</div>
+                    </button>
+                </div>
+            </div>
+            <div
+                style="
+                    width: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                "
+                id="range-wrap"
+            >
+                <div class="sec-title">출제 범위</div>
+                <div class="toggle">
+                    <button
+                        class="act"
+                        id="rb-all"
+                        onclick="selRange('all', this)"
+                    >
+                        전체 (149개)
+                    </button>
+                    <button id="rb-hl" onclick="selRange('hl', this)">
+                        강조 단어만 (81개)
+                    </button>
+                </div>
+            </div>
+
+            <div
+                style="
+                    width: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                "
+            >
+                <div class="sec-title">출제 문항 수</div>
+                <div class="count-grid" id="count-selector">
+                    <button class="act" onclick="selCount('all', this)">
+                        전체
+                    </button>
+                    <button onclick="selCount(10, this)">10개</button>
+                    <button onclick="selCount(20, this)">20개</button>
+                    <button onclick="selCount(30, this)">30개</button>
+                    <button onclick="selCount(50, this)">50개</button>
+                </div>
+            </div>
+
+            <button
+                class="start-btn"
+                id="start-btn"
+                onclick="startQuiz()"
+                disabled
+            >
+                모드를 선택하세요
+            </button>
+        </div>
+
+        <div id="s-quiz">
+            <div class="q-header">
+                <button class="back-btn" onclick="goBack()">←</button>
+                <div class="prog-wrap">
+                    <div class="prog-bg">
+                        <div class="prog-fill" id="prog"></div>
+                    </div>
+                    <div class="prog-txt" id="prog-txt">1 / 1</div>
+                </div>
+                <div class="score" id="score">✓ 0</div>
+            </div>
+
+            <div class="card" id="card">
+                <div class="card-lbl" id="card-lbl">문제</div>
+                <div class="card-prompt" id="card-prompt"></div>
+                <div class="hint-text" id="hint-text"></div>
+                <button class="hint-btn" id="hint-btn" onclick="showHint()">
+                    힌트보기
+                </button>
+                <span class="rt-badge" id="rt-badge"></span>
+            </div>
+
+            <div class="input-area">
+                <div class="py-preview" id="py-preview"></div>
+                <div class="py-guide" id="py-guide">
+                    모음 입력 후 바로 숫자로 성조 입력 &nbsp;|&nbsp;
+                    <strong>1</strong>=ā &nbsp;<strong>2</strong>=á
+                    &nbsp;<strong>3</strong>=ǎ &nbsp;<strong>4</strong>=à
+                    &nbsp;<strong>5</strong>=경성(무표기) &nbsp;&nbsp; 예:
+                    <strong>sa1n</strong> → sān &nbsp;&nbsp;
+                    <strong>liu4</strong> → liù
+                </div>
+                <input
+                    type="text"
+                    id="ans"
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    placeholder="의미를 입력하세요"
+                />
+                <button
+                    class="sub-btn normal"
+                    id="sub-btn"
+                    onclick="onSubBtn()"
+                >
+                    확인 &nbsp;↵
+                </button>
+            </div>
+
+            <div class="result-row" id="result-row">
+                <div class="result-lbl" id="result-lbl"></div>
+                <div class="result-ans" id="result-ans"></div>
+            </div>
+        </div>
+
+        <div id="s-done">
+            <div class="done-emoji" id="done-emoji">🎉</div>
+            <div class="done-title">학습 완료!</div>
+            <div class="done-stats" id="done-stats"></div>
+
+            <div class="sec-title" style="text-align: left">
+                학습 요약 (내가 쓴 답 비교)
+            </div>
+            <div class="summary-container" id="summary-list"></div>
+
+            <button
+                class="retry-btn"
+                onclick="goBack()"
+                style="margin-top: 10px"
+            >
+                다시 하기
+            </button>
+        </div>
+
+        <script>
+            var WORDS = [
+                { n: 1, h: "一", pd: "yī", m: "1, 하나", hl: true },
+                { n: 2, h: "二", pd: "èr", m: "2, 둘", hl: true },
+                { n: 3, h: "三", pd: "sān", m: "3, 셋", hl: true },
+                { n: 4, h: "四", pd: "sì", m: "4, 넷", hl: true },
+                { n: 5, h: "五", pd: "wǔ", m: "5, 다섯", hl: true },
+                { n: 6, h: "六", pd: "liù", m: "6,여섯", hl: true },
+                { n: 7, h: "七", pd: "qī", m: "7, 일곱", hl: true },
+                { n: 8, h: "八", pd: "bā", m: "8, 여덟", hl: true },
+                { n: 9, h: "九", pd: "jiǔ", m: "9, 아홉", hl: true },
+                { n: 10, h: "十", pd: "shí", m: "10, 열", hl: true },
+                { n: 11, h: "吃", pd: "chī", m: "먹다", hl: false },
+                { n: 12, h: "去", pd: "qù", m: "가다", hl: false },
+                { n: 13, h: "饭", pd: "fàn", m: "밥", hl: false },
+                { n: 14, h: "学校", pd: "xuéxiào", m: "학교", hl: false },
+                { n: 15, h: "苹果", pd: "píngguǒ", m: "사과", hl: false },
+                { n: 16, h: "공원", pd: "gōngyuán", m: "공원", hl: false },
+                { n: 17, h: "我", pd: "wǒ", m: "나", hl: true },
+                { n: 18, h: "你", pd: "nǐ", m: "너", hl: true },
+                { n: 19, h: "好", pd: "hǎo", m: "안녕하다, 좋다", hl: true },
+                {
+                    n: 20,
+                    h: "们",
+                    pd: "men",
+                    m: "~들[복수를 나타냄]",
+                    hl: true,
+                },
+                { n: 21, h: "再见", pd: "zàijiàn", m: "잘 가, 안녕", hl: true },
+                { n: 22, h: "明天", pd: "míngtiān", m: "내일", hl: true },
+                { n: 23, h: "见", pd: "jiàn", m: "만나다, 보고", hl: true },
+                { n: 24, h: "您", pd: "nín", m: "당신[너의 존칭]", hl: false },
+                { n: 25, h: "大家", pd: "dàjiā", m: "모두, 여러분", hl: false },
+                { n: 26, h: "早上", pd: "zǎoshang", m: "아침", hl: false },
+                { n: 27, h: "下午", pd: "xiàwǔ", m: "오후", hl: false },
+                { n: 28, h: "晚上", pd: "wǎnshang", m: "저녁, 밤", hl: false },
+                { n: 29, h: "周末", pd: "zhōumò", m: "주말", hl: false },
+                { n: 30, h: "我们", pd: "wǒmen", m: "우리", hl: false },
+                { n: 31, h: "你们", pd: "nǐmen", m: "너희", hl: false },
+                { n: 32, h: "他", pd: "tā", m: "그", hl: false },
+                { n: 33, h: "他们", pd: "tāmen", m: "그들", hl: false },
+                { n: 34, h: "她", pd: "tā", m: "그녀", hl: false },
+                { n: 35, h: "她们", pd: "tāmen", m: "그녀들", hl: false },
+                { n: 36, h: "谢谢", pd: "xièxie", m: "고맙습니다", hl: true },
+                { n: 37, h: "不", pd: "bù", m: "(~이) 아니다", hl: true },
+                { n: 38, h: "客气", pd: "kèqi", m: "예의를 차리다", hl: true },
+                {
+                    n: 39,
+                    h: "不好意思",
+                    pd: "bù hǎoyìsi",
+                    m: "미안합니다",
+                    hl: true,
+                },
+                { n: 40, h: "没", pd: "méi", m: "없다", hl: true },
+                { n: 41, h: "关系", pd: "guānxi", m: "관계", hl: true },
+                { n: 42, h: "老师", pd: "lǎoshī", m: "선생님", hl: false },
+                {
+                    n: 43,
+                    h: "对不起",
+                    pd: "duìbuqǐ",
+                    m: "미안합니다",
+                    hl: false,
+                },
+                {
+                    n: 44,
+                    h: "拱手",
+                    pd: "gǒngshǒu",
+                    m: "공수, 두 손을 맞잡다[중국의 전통 인사법]",
+                    hl: false,
+                },
+                {
+                    n: 45,
+                    h: "抱拳",
+                    pd: "bàoquán",
+                    m: "포권[무술 경기나 공연 등에서]",
+                    hl: false,
+                },
+                { n: 46, h: "恭喜", pd: "gōngxǐ", m: "축하합니다", hl: false },
+                { n: 47, h: "慢走", pd: "mànzǒu", m: "잘 가", hl: false },
+                { n: 48, h: "晚安", pd: "wǎn'ān", m: "잘 자", hl: false },
+                { n: 49, h: "叫", pd: "jiào", m: "~라고 하다", hl: true },
+                { n: 50, h: "什么", pd: "shénme", m: "무엇, 무슨", hl: true },
+                { n: 51, h: "名字", pd: "míngzi", m: "이름", hl: true },
+                { n: 52, h: "呢", pd: "ne", m: "~는요?", hl: true },
+                { n: 53, h: "欢迎", pd: "huānyíng", m: "환영하다", hl: true },
+                { n: 54, h: "贵姓", pd: "guìxìng", m: "성씨", hl: false },
+                { n: 55, h: "是", pd: "shì", m: "~이다, 네", hl: true },
+                { n: 56, h: "哪", pd: "nǎ", m: "어느", hl: true },
+                { n: 57, h: "国", pd: "guó", m: "나라", hl: true },
+                { n: 58, h: "人", pd: "rén", m: "사람", hl: true },
+                { n: 59, h: "也", pd: "yě", m: "~도, 또한", hl: true },
+                { n: 60, h: "吗", pd: "ma", m: "~입니까?", hl: true },
+                { n: 61, h: "韩国", pd: "Hánguó", m: "한국", hl: true },
+                { n: 62, h: "中国", pd: "Zhōngguó", m: "중국", hl: true },
+                { n: 63, h: "爱", pd: "ài", m: "사랑하다", hl: true },
+                { n: 64, h: "美国", pd: "Měiguó", m: "미국", hl: false },
+                { n: 65, h: "印度", pd: "Yìndù", m: "인도", hl: false },
+                { n: 66, h: "日本", pd: "Rìběn", m: "일본", hl: false },
+                { n: 67, h: "学生", pd: "xuésheng", m: "학생", hl: false },
+                { n: 68, h: "意大利", pd: "Yìdàlì", m: "이탈리아", hl: false },
+                { n: 69, h: "加拿大", pd: "Jiānádà", m: "캐나다", hl: false },
+                { n: 70, h: "西班牙", pd: "Xībānyá", m: "스페인", hl: false },
+                {
+                    n: 71,
+                    h: "澳大利亚",
+                    pd: "Àodàlìyà",
+                    m: "오스트레일리아",
+                    hl: false,
+                },
+                { n: 72, h: "这", pd: "zhè", m: "이(것), 이 사람", hl: true },
+                { n: 73, h: "谁", pd: "shéi", m: "누구", hl: true },
+                { n: 74, h: "今年", pd: "jīnnián", m: "올해", hl: true },
+                { n: 75, h: "多", pd: "duō", m: "얼마나, 많다", hl: true },
+                {
+                    n: 76,
+                    h: "大",
+                    pd: "dà",
+                    m: "(나이가) 많다, 크다",
+                    hl: true,
+                },
+                { n: 77, h: "岁", pd: "suì", m: "살, 세", hl: true },
+                { n: 78, h: "朋友", pd: "péngyou", m: "친구", hl: false },
+                {
+                    n: 79,
+                    h: "几",
+                    pd: "jǐ",
+                    m: "몇[주로 10 이하의 수를 물을 때]",
+                    hl: false,
+                },
+                { n: 80, h: "年纪", pd: "niánjì", m: "나이, 연령", hl: false },
+                { n: 81, h: "有", pd: "yǒu", m: "(가지고) 있다", hl: true },
+                { n: 82, h: "没有", pd: "méiyǒu", m: "없다", hl: true },
+                { n: 83, h: "只", pd: "zhǐ", m: "오직, 단지", hl: true },
+                { n: 84, h: "个", pd: "gè", m: "개, 명[단위]", hl: true },
+                { n: 85, h: "上", pd: "shàng", m: "(~에) 다니다", hl: true },
+                { n: 86, h: "年级", pd: "niánjí", m: "학년", hl: true },
+                { n: 87, h: "高中", pd: "gāozhōng", m: "고등학교", hl: true },
+                { n: 88, h: "空", pd: "kòng", m: "틈, 짬, 시간", hl: false },
+                { n: 89, h: "手机", pd: "shǒujī", m: "휴대 전화", hl: false },
+                { n: 90, h: "自行车", pd: "zìxíngchē", m: "자전거", hl: false },
+                { n: 91, h: "小学", pd: "xiǎoxué", m: "초등학교", hl: false },
+                { n: 92, h: "初중", pd: "chūzhōng", m: "중학교", hl: false },
+                { n: 93, h: "大学", pd: "dàxué", m: "대학교", hl: false },
+                {
+                    n: 94,
+                    h: "独生子",
+                    pd: "dúshēngzǐ",
+                    m: "외동아들",
+                    hl: false,
+                },
+                { n: 95, h: "独生女", pd: "dúshēngnǚ", m: "외동딸", hl: false },
+                {
+                    n: 96,
+                    h: "高考",
+                    pd: "gāokǎo",
+                    m: "까오카오[중국의 대학 입학시험]",
+                    hl: false,
+                },
+                { n: 97, h: "的", pd: "de", m: "~의", hl: true },
+                { n: 98, h: "生日", pd: "shēngrì", m: "생일", hl: true },
+                { n: 99, h: "月", pd: "yuè", m: "월", hl: true },
+                { n: 100, h: "号", pd: "hào", m: "(날짜의) 일", hl: true },
+                { n: 101, h: "星期", pd: "xīngqī", m: "요일", hl: true },
+                { n: 102, h: "星期四", pd: "xīngqīsì", m: "목요일", hl: true },
+                { n: 103, h: "오늘", pd: "jīntiān", m: "오늘", hl: true },
+                { n: 104, h: "日", pd: "rì", m: "날, 일", hl: true },
+                {
+                    n: 105,
+                    h: "儿童节",
+                    pd: "Értóngjié",
+                    m: "어린이날, 아동절",
+                    hl: false,
+                },
+                {
+                    n: 106,
+                    h: "教师节",
+                    pd: "Jiàoshījié",
+                    m: "스승의 날",
+                    hl: false,
+                },
+                {
+                    n: 107,
+                    h: "国庆节",
+                    pd: "Guóqìngjié",
+                    m: "건국 기념일",
+                    hl: false,
+                },
+                { n: 108, h: "星期一", pd: "xīngqīyī", m: "월요일", hl: false },
+                {
+                    n: 109,
+                    h: "星期二",
+                    pd: "xīngqī'èr",
+                    m: "화요일",
+                    hl: false,
+                },
+                {
+                    n: 110,
+                    h: "星期三",
+                    pd: "xīngqīsān",
+                    m: "수요일",
+                    hl: false,
+                },
+                { n: 111, h: "星期五", pd: "xīngqīwǔ", m: "금요일", hl: false },
+                {
+                    n: 112,
+                    h: "星期六",
+                    pd: "xīngqīliù",
+                    m: "토요일",
+                    hl: false,
+                },
+                {
+                    n: 113,
+                    h: "星期天",
+                    pd: "xīngqītiān",
+                    m: "일요일",
+                    hl: false,
+                },
+                { n: 114, h: "星期日", pd: "xīngqīrì", m: "일요일", hl: false },
+                { n: 115, h: "现在", pd: "xiànzài", m: "지금, 현재", hl: true },
+                { n: 116, h: "点", pd: "diǎn", m: "(시간의) 시", hl: true },
+                { n: 117, h: "分", pd: "fēn", m: "(시간의) 분", hl: true },
+                { n: 118, h: "上学", pd: "shàngxué", m: "등교하다", hl: true },
+                { n: 119, h: "半", pd: "bàn", m: "30분, 반", hl: true },
+                { n: 120, h: "两", pd: "liǎng", m: "2, 둘", hl: true },
+                { n: 121, h: "刻", pd: "kè", m: "15분[단위]", hl: true },
+                { n: 122, h: "起床", pd: "qǐchuáng", m: "기상하다", hl: false },
+                { n: 123, h: "上课", pd: "shàngkè", m: "수업하다", hl: false },
+                { n: 124, h: "回", pd: "huí", m: "되돌아가다", hl: false },
+                { n: 125, h: "家", pd: "jiā", m: "집", hl: false },
+                {
+                    n: 126,
+                    h: "睡觉",
+                    pd: "shuìjiào",
+                    m: "잠을 자다",
+                    hl: false,
+                },
+                {
+                    n: 127,
+                    h: "春节",
+                    pd: "Chūnjié",
+                    m: "춘절[음력 1월 1일]",
+                    hl: false,
+                },
+                {
+                    n: 128,
+                    h: "饺子",
+                    pd: "jiǎozi",
+                    m: "자오쯔[교자]",
+                    hl: false,
+                },
+                { n: 129, h: "红包", pd: "hóngbāo", m: "홍바오", hl: false },
+                {
+                    n: 130,
+                    h: "端午节",
+                    pd: "Duānwǔjié",
+                    m: "단오절[음력 5월 5일]",
+                    hl: false,
+                },
+                {
+                    n: 131,
+                    h: "粽子",
+                    pd: "zòngzi",
+                    m: "쫑즈[대나무 잎 등에 싼 찹쌀밥]",
+                    hl: false,
+                },
+                {
+                    n: 132,
+                    h: "中秋节",
+                    pd: "Zhōngqiūjié",
+                    m: "중추절[음력 8월15일]",
+                    hl: false,
+                },
+                {
+                    n: 133,
+                    h: "月饼",
+                    pd: "yuèbing",
+                    m: "월병, 위에빙",
+                    hl: false,
+                },
+                { n: 134, h: "爱好", pd: "àihào", m: "취미", hl: true },
+                { n: 135, h: "喜欢", pd: "xǐhuan", m: "좋아하다", hl: true },
+                { n: 136, h: "爸爸", pd: "bàba", m: "아빠", hl: true },
+                { n: 137, h: "妈妈", pd: "māma", m: "엄마", hl: true },
+                { n: 138, h: "姐姐", pd: "jiějie", m: "언니, 누나", hl: true },
+                { n: 139, h: "哥哥", pd: "gēge", m: "오빠, 형", hl: true },
+                { n: 140, h: "弟弟", pd: "dìdi", m: "남동생", hl: true },
+                { n: 141, h: "妹妹", pd: "mèimei", m: "여동생", hl: true },
+                {
+                    n: 142,
+                    h: "拍视频",
+                    pd: "pāi shìpín",
+                    m: "동영상을 찍다",
+                    hl: true,
+                },
+                { n: 143, h: "做菜", pd: "zuò cài", m: "요리하다", hl: true },
+                {
+                    n: 144,
+                    h: "听音乐",
+                    pd: "tīng yīnyuè",
+                    m: "음악을 듣다",
+                    hl: true,
+                },
+                {
+                    n: 145,
+                    h: "看电影",
+                    pd: "kàn diànyǐng",
+                    m: "영화를 보다",
+                    hl: true,
+                },
+                {
+                    n: 146,
+                    h: "看书",
+                    pd: "kàn shū",
+                    m: "책을 읽다(보다)",
+                    hl: true,
+                },
+                {
+                    n: 147,
+                    h: "唱歌",
+                    pd: "chàng gē",
+                    m: "노래를 부르다",
+                    hl: true,
+                },
+                { n: 148, h: "运动", pd: "yùndòng", m: "운동하다", hl: true },
+                {
+                    n: 149,
+                    h: "玩游戏",
+                    pd: "wán yóuxì",
+                    m: "게임을 하다",
+                    hl: true,
+                },
+            ];
+
+            /* 성조 변환 핵심 로직 */
+            var TONE_TABLE = {
+                a: ["ā", "á", "ǎ", "à", "a"],
+                e: ["ē", "é", "ě", "è", "e"],
+                i: ["ī", "í", "ǐ", "ì", "i"],
+                o: ["ō", "ó", "ǒ", "ò", "o"],
+                u: ["ū", "ú", "ǔ", "ù", "u"],
+                v: ["ǖ", "ǘ", "ǚ", "ǜ", "ü"],
+                A: ["Ā", "Á", "Ǎ", "À", "A"],
+                E: ["Ē", "É", "Ě", "È", "E"],
+                I: ["Ī", "Í", "Ǐ", "Ì", "I"],
+                O: ["Ō", "Ó", "Ǒ", "Ò", "O"],
+                U: ["Ū", "Ú", "Ǔ", "Ù", "U"],
+                V: ["Ǖ", "Ǘ", "Ǚ", "Ǜ", "Ü"],
+            };
+            var BASE_MAP = {};
+            (function () {
+                var entries = Object.keys(TONE_TABLE);
+                for (var k = 0; k < entries.length; k++) {
+                    var base = entries[k];
+                    var arr = TONE_TABLE[base];
+                    for (var i = 0; i < arr.length; i++) {
+                        if (arr[i] !== base) BASE_MAP[arr[i]] = base;
+                    }
+                }
+            })();
+
+            function isVowel(ch) {
+                var b = BASE_MAP[ch] || ch;
+                return !!TONE_TABLE[b];
+            }
+
+            function applyTone(str, n) {
+                for (var i = str.length - 1; i >= 0; i--) {
+                    var ch = str[i];
+                    var base = BASE_MAP[ch] || ch;
+                    if (TONE_TABLE[base]) {
+                        var rep = n === 5 ? base : TONE_TABLE[base][n - 1];
+                        return str.slice(0, i) + rep + str.slice(i + 1);
+                    }
+                }
+                return str;
+            }
+
+            function convertInput(str) {
+                var result = "";
+                var i = 0;
+                while (i < str.length) {
+                    var ch = str[i];
+                    var num = parseInt(ch);
+                    if (num >= 1 && num <= 5) {
+                        result = applyTone(result, num);
+                        i++;
+                    } else {
+                        result += ch;
+                        i++;
+                    }
+                }
+                return result;
+            }
+
+            /* 상태 */
+            var gMode = null,
+                gRange = "all",
+                gTargetCount = "all";
+            var gQueue = [],
+                gIdx = 0,
+                gCorrect = 0;
+            var gPhase = "input";
+            var gIsPy = false;
+            var gHistory = [];
+
+            function shuffleArray(array) {
+                for (var i = array.length - 1; i > 0; i--) {
+                    var j = Math.floor(Math.random() * (i + 1));
+                    var temp = array[i];
+                    array[i] = array[j];
+                    array[j] = temp;
+                }
+            }
+
+            /* 설정 제어 */
+            function selMode(btn) {
+                var btns = document.querySelectorAll(".mode-btn");
+                for (var i = 0; i < btns.length; i++)
+                    btns[i].classList.remove("sel");
+                btn.classList.add("sel");
+                gMode = btn.getAttribute("data-mode");
+                document.getElementById("start-btn").disabled = false;
+                document.getElementById("start-btn").textContent =
+                    "학습 시작 →";
+            }
+
+            function selRange(r, btn) {
+                gRange = r;
+                var btns = document.querySelectorAll("#range-wrap button");
+                for (var i = 0; i < btns.length; i++)
+                    btns[i].classList.remove("act");
+                btn.classList.add("act");
+            }
+
+            function selCount(cnt, btn) {
+                gTargetCount = cnt;
+                var btns = document.querySelectorAll("#count-selector button");
+                for (var i = 0; i < btns.length; i++)
+                    btns[i].classList.remove("act");
+                btn.classList.add("act");
+            }
+
+            function startQuiz() {
+                if (!gMode) return;
+                var pool = [];
+                for (var i = 0; i < WORDS.length; i++) {
+                    if (gRange === "hl" && !WORDS[i].hl) continue;
+                    pool.push(WORDS[i]);
+                }
+                shuffleArray(pool);
+
+                // 선택한 문항 수 설정 적용
+                if (gTargetCount !== "all") {
+                    var limit = parseInt(gTargetCount);
+                    if (pool.length > limit) {
+                        pool = pool.slice(0, limit);
+                    }
+                }
+
+                gQueue = pool;
+                gIdx = 0;
+                gCorrect = 0;
+                gPhase = "input";
+                gIsPy = gMode === "hanzi-pinyin" || gMode === "meaning-pinyin";
+                gHistory = [];
+                document.getElementById("s-setup").style.display = "none";
+                document.getElementById("s-quiz").style.display = "flex";
+                document.getElementById("s-done").style.display = "none";
+                renderCard();
+            }
+
+            /* 카드 렌더 */
+            function renderCard() {
+                if (gIdx >= gQueue.length) {
+                    showDone();
+                    return;
+                }
+                var w = gQueue[gIdx];
+                gPhase = "input";
+
+                document.getElementById("prog").style.width =
+                    ((gIdx / gQueue.length) * 100).toFixed(1) + "%";
+                document.getElementById("prog-txt").textContent =
+                    gIdx + 1 + " / " + gQueue.length;
+                document.getElementById("score").textContent = "✓ " + gCorrect;
+
+                document.getElementById("card").className = "card";
+                document.getElementById("result-row").style.display = "none";
+                document.getElementById("hint-text").style.display = "none";
+                document.getElementById("hint-btn").style.display = "block";
+                setBadge("", "");
+
+                var prompt = document.getElementById("card-prompt");
+                var lbl = document.getElementById("card-lbl");
+                var guide = document.getElementById("py-guide");
+                var prev = document.getElementById("py-preview");
+                var inp = document.getElementById("ans");
+                var btn = document.getElementById("sub-btn");
+
+                inp.value = "";
+                inp.className = "";
+                inp.readOnly = false;
+                prev.textContent = "";
+
+                if (gMode === "hanzi-meaning") {
+                    lbl.textContent = "간화자";
+                    prompt.className = "card-prompt";
+                    prompt.textContent = w.h;
+                    inp.placeholder = "한글 뜻을 입력하세요 (제출: Enter)";
+                    guide.style.display = "none";
+                    prev.style.display = "none";
+                    doSpeak(w);
+                } else if (gMode === "hanzi-pinyin") {
+                    lbl.textContent = "간화자";
+                    prompt.className = "card-prompt";
+                    prompt.textContent = w.h;
+                    inp.placeholder = "병음 입력 후 Enter  예) sa1n → sān";
+                    guide.style.display = "block";
+                    prev.style.display = "block";
+                    doSpeak(w);
+                } else if (gMode === "pinyin-meaning") {
+                    lbl.textContent = "한어병음";
+                    prompt.className = "card-prompt py";
+                    prompt.textContent = w.pd;
+                    inp.placeholder = "한글 뜻을 입력하세요 (제출: Enter)";
+                    guide.style.display = "none";
+                    prev.style.display = "none";
+                    doSpeak(w);
+                } else {
+                    lbl.textContent = "한글 뜻";
+                    prompt.className = "card-prompt ko";
+                    prompt.textContent = w.m;
+                    inp.placeholder = "병음 입력 후 Enter  예) liu4 → liù";
+                    guide.style.display = "block";
+                    prev.style.display = "block";
+                    doSpeak(w);
+                }
+
+                btn.textContent = "확인  ↵";
+                btn.className = "sub-btn normal";
+                setTimeout(function () {
+                    inp.focus();
+                }, 60);
+            }
+
+            /* 입력 및 키보드 컨트롤 이벤트 청취기 */
+            var ansEl = document.getElementById("ans");
+            var prevEl = document.getElementById("py-preview");
+
+            ansEl.addEventListener("keydown", function (e) {
+                if (e.isComposing) return;
+
+                // 정답 단계 상태 컨트롤
+                if (gPhase === "correct") {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        nextCard();
+                    }
+                    return;
+                }
+
+                // 오답 단계 상태 컨트롤 (★ 오답 시 스페이스바로만 넘어감, 엔터 무시)
+                if (gPhase === "wrong") {
+                    if (e.key === " ") {
+                        e.preventDefault();
+                        nextCard();
+                    } else if (e.key === "Enter") {
+                        e.preventDefault(); // 틀렸을 땐 엔터키 작동을 막음
+                    }
+                    return;
+                }
+
+                // 성조 변환 단축키 작동 수호 (병음 모드)
+                if (gIsPy && e.key >= "1" && e.key <= "5") {
+                    e.preventDefault();
+                    var n = parseInt(e.key);
+                    var cur = this.value;
+                    var pos =
+                        this.selectionStart !== undefined
+                            ? this.selectionStart
+                            : cur.length;
+                    var before = cur.slice(0, pos);
+                    var after = cur.slice(pos);
+                    var converted = applyTone(before, n);
+                    this.value = converted + after;
+                    var newPos = converted.length;
+                    this.setSelectionRange(newPos, newPos);
+                    prevEl.textContent = this.value;
+                    return;
+                }
+
+                // ★ 오직 엔터키(Enter)를 통해서만 정답 제출 가능 (공백 제출 기능 원천 삭제)
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    doConfirm();
+                    return;
+                }
+            });
+
+            ansEl.addEventListener("input", function () {
+                if (gPhase !== "input") return;
+                if (gIsPy) prevEl.textContent = this.value;
+            });
+
+            /* 정답 판정 알고리즘 */
+            function normStr(s) {
+                return s
+                    .trim()
+                    .toLowerCase()
+                    .replace(/'/g, "")
+                    .replace(/\s+/g, " ");
+            }
+
+            function checkAns(userVal, w) {
+                var u = normStr(userVal);
+                if (!u) return false;
+
+                if (gMode === "hanzi-meaning" || gMode === "pinyin-meaning") {
+                    var tokens = w.m.split(/[,，、\/\[\]()\s]+/);
+                    for (var i = 0; i < tokens.length; i++) {
+                        var t = tokens[i].trim().toLowerCase();
+                        if (t && (u.indexOf(t) >= 0 || t.indexOf(u) >= 0))
+                            return true;
+                    }
+                    return false;
+                } else {
+                    var converted = normStr(convertInput(userVal));
+                    var answer = normStr(w.pd);
+                    return converted === answer;
+                }
+            }
+
+            /* 확인 및 정답 처리 채점 */
+            function onSubBtn() {
+                if (gPhase === "correct" || gPhase === "wrong") {
+                    nextCard();
+                    return;
+                }
+                doConfirm();
+            }
+
+            function doConfirm() {
+                var val = ansEl.value.trim();
+                if (!val) return;
+                var w = gQueue[gIdx];
+                var ok = checkAns(val, w);
+                var btn = document.getElementById("sub-btn");
+
+                document.getElementById("hint-btn").style.display = "none";
+                ansEl.readOnly = true;
+
+                var displayUserAns = gIsPy ? convertInput(val) : val;
+
+                gHistory.push({
+                    word: w,
+                    userAns: displayUserAns,
+                    isCorrect: ok,
+                });
+
+                if (ok) {
+                    gCorrect++;
+                    gPhase = "correct";
+                    document.getElementById("card").className = "card ok";
+                    ansEl.className = "st-ok";
+                    setBadge("✓ 정답", "ok");
+                    document.getElementById("score").textContent =
+                        "✓ " + gCorrect;
+                    btn.textContent = "다음  Space / ↵";
+                    btn.className = "sub-btn next";
+                    showResult(true, w);
+                } else {
+                    gPhase = "wrong";
+                    document.getElementById("card").className = "card ng";
+                    ansEl.className = "st-ng";
+                    setBadge("✗ 오답", "ng");
+                    btn.textContent = "확인 후 넘기기  [ Space ] 연속 입력";
+                    btn.className = "sub-btn check-wrong";
+                    showResult(false, w);
+                }
+            }
+
+            function showResult(ok, w) {
+                var row = document.getElementById("result-row");
+                var lbl = document.getElementById("result-lbl");
+                var ans = document.getElementById("result-ans");
+                row.style.display = "flex";
+                lbl.className = ok ? "result-lbl ok" : "result-lbl ng";
+                lbl.textContent = ok ? "✓ 정답" : "✗ 오답 — 정답";
+                ans.innerHTML =
+                    "<span class='hz'>" +
+                    w.h +
+                    "</span> <span class='py'>" +
+                    w.pd +
+                    "</span> " +
+                    w.m;
+            }
+
+            function setBadge(text, cls) {
+                var b = document.getElementById("rt-badge");
+                b.textContent = text;
+                b.className = "rt-badge" + (cls ? " " + cls : "");
+            }
+
+            function nextCard() {
+                gIdx++;
+                renderCard();
+            }
+
+            function showHint() {
+                var w = gQueue[gIdx];
+                var h = document.getElementById("hint-text");
+                h.style.display = "block";
+                document.getElementById("hint-btn").style.display = "none";
+                if (gMode === "hanzi-meaning") h.textContent = "힌트: " + w.pd;
+                else if (gMode === "hanzi-pinyin")
+                    h.textContent = "힌트: " + w.m;
+                else if (gMode === "pinyin-meaning")
+                    h.textContent = "힌트: " + w.h;
+                else h.textContent = "힌트: " + w.h;
+            }
+
+            function doSpeak(w) {
+                if (
+                    gMode === "hanzi-meaning" ||
+                    gMode === "hanzi-pinyin" ||
+                    gMode === "meaning-pinyin"
+                )
+                    return;
+                if (!window.speechSynthesis) return;
+                var utt = new SpeechSynthesisUtterance(w.h);
+                utt.lang = "zh-CN";
+                utt.rate = 0.85;
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.speak(utt);
+            }
+
+            function showDone() {
+                document.getElementById("s-quiz").style.display = "none";
+                document.getElementById("s-done").style.display = "flex";
+                var t = gQueue.length;
+                var pct = Math.round((gCorrect / t) * 100);
+                document.getElementById("done-emoji").textContent =
+                    pct >= 90
+                        ? "🏆"
+                        : pct >= 70
+                          ? "🎉"
+                          : pct >= 50
+                            ? "😅"
+                            : "💪";
+                document.getElementById("done-stats").innerHTML =
+                    "총 <span>" +
+                    t +
+                    "</span>문제 중 <span>" +
+                    gCorrect +
+                    "</span>문제 정답<br>정답률 <span>" +
+                    pct +
+                    "%</span>";
+
+                var sumListEl = document.getElementById("summary-list");
+                sumListEl.innerHTML = "";
+
+                gHistory.forEach(function (item) {
+                    var div = document.createElement("div");
+                    div.className =
+                        "summary-item " +
+                        (item.isCorrect ? "is-correct" : "is-wrong");
+
+                    var correctAnsValue =
+                        gMode === "hanzi-meaning" || gMode === "pinyin-meaning"
+                            ? item.word.m
+                            : item.word.pd;
+
+                    div.innerHTML =
+                        "<div class='sum-q-line'>" +
+                        "<span class='hz'>" +
+                        item.word.h +
+                        "</span>" +
+                        "<span class='py'>" +
+                        item.word.pd +
+                        "</span>" +
+                        "<span class='m'>" +
+                        item.word.m +
+                        "</span>" +
+                        "</div>" +
+                        "<div class='sum-ans-compare'>" +
+                        "<div class='sum-user-ans'>내가 쓴 답: <span>" +
+                        (item.userAns || "(공백)") +
+                        "</span></div>" +
+                        (!item.isCorrect
+                            ? "<div class='sum-correct-ans'>실제 정답: " +
+                              correctAnsValue +
+                              "</div>"
+                            : "") +
+                        "</div>";
+
+                    sumListEl.appendChild(div);
+                });
+            }
+
+            function goBack() {
+                if (window.speechSynthesis) window.speechSynthesis.cancel();
+                document.getElementById("s-quiz").style.display = "none";
+                document.getElementById("s-done").style.display = "none";
+                document.getElementById("s-setup").style.display = "flex";
+                gPhase = "input";
+            }
+        </script>
+    </body>
+</html>
