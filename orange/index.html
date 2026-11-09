@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Orange">
-<title>Orange 웹</title>
+<title>Orange</title>
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #eee; font-family: -apple-system, sans-serif;
                overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
@@ -20,7 +20,7 @@
 </head>
 <body>
 <div id="qt"></div>
-<div id="loading"><div style="font-size:20px;font-weight:600">Orange</div><div id="bar"><div></div></div><div id="status">불러오는 중</div><div style="color:#999;font-size:12px">처음 접속은 1~2분 걸릴 수 있어요. 다음부터는 더 빨라요.</div><div id="err"></div></div>
+<div id="loading"><div style="font-size:20px;font-weight:600">Orange</div><div id="bar"><div></div></div><div id="status">Loading</div><div style="color:#999;font-size:12px">The first visit may take a minute or two. Later visits are faster.</div><div id="err"></div></div>
 <script type="module">
 import { loadPyodide } from "./pyodide.mjs";
 // Large files are stored gzip-compressed (keeps every file under upload limits);
@@ -66,19 +66,19 @@ window.orangeWebDownload = (name, data) => {
 };
 const st = (msg, pct) => { document.getElementById("status").textContent = msg; if (pct != null) document.querySelector("#bar>div").style.width = pct + "%"; console.log("[boot]", msg); };
 try {
-  st("파이썬 불러오는 중", 5);
+  st("Loading Python", 5);
   const py = await loadPyodide({ indexURL: "./" });
   window.py = py;
-  st("계산 패키지 불러오는 중 (처음엔 오래 걸려요)", 25);
+  st("Loading packages", 25);
   await py.loadPackage(["numpy", "scipy", "scikit-learn", "pandas", "bottleneck", "joblib",
     "threadpoolctl", "networkx", "requests", "pyyaml", "httpx", "xlrd", "pygments", "packaging",
     "python-dateutil", "pytz", "matplotlib", "sqlite3", "ssl", "lzma"]);
-  st("오렌지 불러오는 중", 70);
+  st("Loading Orange", 70);
   const tar = await (await fetch("./orange-sp.tar")).arrayBuffer();
   py.unpackArchive(tar, "tar", { extractDir: "/lib/python3.13/site-packages" });
   const boot = await (await fetch("./boot.py?" + Date.now())).text();
   py._module.qtContainerElements = [document.getElementById("qt")];
-  st("화면 준비 중", 90);
+  st("Starting", 90);
   py.FS.writeFile("/boot.py", boot);
   py.FS.mkdirTree("/fonts");
   py.FS.writeFile("/fonts/NanumGothic.ttf", new Uint8Array(await (await fetch("./NanumGothic.ttf")).arrayBuffer()));

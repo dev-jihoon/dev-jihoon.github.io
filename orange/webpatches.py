@@ -478,16 +478,20 @@ def patch_canvas_files(mainwindow_cls):
         if not document.isModifiedStrict():
             proceed()
             return
+        # Same message box as CanvasMainWindow.ask_save_changes
+        _tr = cm._tr
         path = document.path()
         if path:
-            text = "'%s'의 바뀐 내용을 저장할까요?" % os.path.basename(path)
+            text = self.tr(_tr.m[165, 'Do you want to save changes made to %s?']) \
+                % os.path.basename(path)
         else:
-            text = "이 워크플로를 저장할까요?"
-        mb = QMessageBox(QMessageBox.Question, "Save Changes?", text,
-                         QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
+            text = self.tr(_tr.m[166, 'Do you want to save this workflow?'])
+        mb = QMessageBox(QMessageBox.Question, self.tr(_tr.m[167, "Save Changes?"]),
+                         text,
+                         QMessageBox.Save | QMessageBox.Cancel | QMessageBox.Discard,
                          self)
-        mb.setInformativeText("저장하지 않으면 바뀐 내용이 사라져요.\n"
-                              "Save를 누르면 .ows 파일로 다운로드돼요.")
+        mb.setInformativeText(
+            self.tr(_tr.m[168, "Your changes will be lost if you do not save them."]))
         mb.setDefaultButton(QMessageBox.Save)
 
         def answered(button):
