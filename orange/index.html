@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Orange">
+<title>Orange 웹</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #eee; font-family: -apple-system, sans-serif;
+               overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  #qt { position: fixed; inset: 0; touch-action: none; }
+  #loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: #fff; z-index: 10; }
+  #status { color: #555; font-size: 15px; }
+  #bar { width: 260px; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
+  #bar > div { height: 100%; width: 0; background: #f7941d; transition: width .3s; }
+  #err { color: #b00; white-space: pre-wrap; font: 12px monospace; max-width: 90vw; max-height: 40vh; overflow: auto; }
+</style>
+</head>
+<body>
+<div id="qt"></div>
+<div id="loading"><div style="font-size:20px;font-weight:600">Orange</div><div id="bar"><div></div></div><div id="status">불러오는 중</div><div style="color:#999;font-size:12px">처음 접속은 1~2분 걸릴 수 있어요. 다음부터는 더 빨라요.</div><div id="err"></div></div>
+<script type="module">
+import { loadPyodide } from "./pyodide.mjs";
+// Large files are stored gzip-compressed (keeps every file under upload limits);
+// decompress them transparently in the browser.
+const GZ = ["pyodide.asm.wasm", "orange-sp.tar", "NanumGothic.ttf"];
+const _fetch = window.fetch.bind(window);
+window.fetch = async (input, init) => {
+  const url = typeof input === "string" ? input : (input instanceof URL ? input.href : input.url);
+  const name = url.split("?")[0].split("/").pop();
+  if (GZ.includes(name)) {
+    const r = await _fetch(url.split("?")[0] + ".gz", init);
+    if (!r.ok) throw new Error("download failed: " + name);
+    const body = r.body.pipeThrough(new DecompressionStream("gzip"));
+    const type = name.endsWith(".wasm") ? "application/wasm" : "application/octet-stream";
+    return new Response(body, { status: 200, headers: { "Content-Type": type } });
+  }
+  return _fetch(input, init);
+};
+// Browser file helpers used from Python (webpatches.py)
+const picker = document.createElement("input");
+picker.type = "file"; picker.style.display = "none"; document.body.appendChild(picker);
+window.orangeWebPickFile = (accept, cb) => {
+  picker.accept = accept || "";
+  picker.value = "";
+  picker.onchange = async () => {
+    const f = picker.files[0];
+    if (!f) return;
+    const buf = new Uint8Array(await f.arrayBuffer());
+    cb(f.name, buf);
+  };
+  picker.click();
+};
+window.orangeModified = false;
+window.addEventListener("beforeunload", (e) => {
+  if (window.orangeModified) { e.preventDefault(); e.returnValue = ""; }
+});
+window.orangeWebDownload = (name, data) => {
+  const blob = new Blob([data], { type: "application/octet-stream" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+};
+const st = (msg, pct) => { document.getElementById("status").textContent = msg; if (pct != null) document.querySelector("#bar>div").style.width = pct + "%"; console.log("[boot]", msg); };
+try {
+  st("파이썬 불러오는 중", 5);
+  const py = await loadPyodide({ indexURL: "./" });
+  window.py = py;
+  st("계산 패키지 불러오는 중 (처음엔 오래 걸려요)", 25);
+  await py.loadPackage(["numpy", "scipy", "scikit-learn", "pandas", "bottleneck", "joblib",
+    "threadpoolctl", "networkx", "requests", "pyyaml", "httpx", "xlrd", "pygments", "packaging",
+    "python-dateutil", "pytz", "matplotlib", "sqlite3", "ssl", "lzma"]);
+  st("오렌지 불러오는 중", 70);
+  const tar = await (await fetch("./orange-sp.tar")).arrayBuffer();
+  py.unpackArchive(tar, "tar", { extractDir: "/lib/python3.13/site-packages" });
+  const boot = await (await fetch("./boot.py?" + Date.now())).text();
+  py._module.qtContainerElements = [document.getElementById("qt")];
+  st("화면 준비 중", 90);
+  py.FS.writeFile("/boot.py", boot);
+  py.FS.mkdirTree("/fonts");
+  py.FS.writeFile("/fonts/NanumGothic.ttf", new Uint8Array(await (await fetch("./NanumGothic.ttf")).arrayBuffer()));
+  py.FS.writeFile("/webpatches.py", await (await fetch("./webpatches.py?" + Date.now())).text());
+  await py.runPythonAsync(`exec(compile(open('/boot.py').read(), 'boot.py', 'exec'), {'__name__': '__main__'})`);
+  document.getElementById("loading").style.display = "none";
+  console.log("[boot] ready");
+  const q = new URLSearchParams(location.search);
+  if (q.get("test")) {
+    const code = await (await fetch("./" + q.get("test") + "?" + Date.now())).text();
+    py.FS.writeFile("/test.py", code);
+    await py.runPythonAsync(`exec(compile(open('/test.py').read(), 'test.py', 'exec'), {'__name__': '__test__'})`);
+    console.log("[test] done");
+  }
+} catch (e) {
+  document.getElementById("err").textContent = String(e);
+  console.log("[boot] ERROR " + e);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+--- /home/claude/venv311/lib/python3.11/site-packages/AnyQt/_fixes.py	2026-11-10 00:59:07.658291306 +0900
++++ AnyQt/_fixes.py	2026-11-10 02:41:13.408744173 +0900
+@@ -58,6 +58,18 @@
+     import ctypes
+     from ._ctypes import load_qtlib
+     qtgui = load_qtlib("QtGui")
++    if qtgui is None:
++        # WebAssembly build: no shared Qt library to reach via ctypes.
++        # Keep a Python-side reference so QAction.menu() round-trips.
++        from PyQt6.QtGui import QAction
++        if not hasattr(QAction, "setMenu"):
++            def QAction_setMenu(self, menu):
++                self._anyqt_menu = menu
++            def QAction_menu(self):
++                return getattr(self, "_anyqt_menu", None)
++            QAction.setMenu = QAction_setMenu
++            QAction.menu = QAction_menu
++        return
+     if os.name == "posix":  # assuming gcc compatible compiler
+         _QAction_setMenuObject = qtgui['_ZN7QAction13setMenuObjectEP7QObject']
+         _QAction_menuObject = qtgui['_ZNK7QAction10menuObjectEv']

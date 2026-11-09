@@ -1,0 +1,6 @@
+PyQt6 6.10.2, sip/QtGui/qaction.sip (QAction.setMenu %MethodCode):
+  typedef void *(*pyqt6_qtgui_qaction_set_menu_t)(QAction *, QMenu *);
+changed to
+  typedef void (*pyqt6_qtgui_qaction_set_menu_t)(QAction *, QMenu *);
+The exported function returns void; in WebAssembly the mismatched function
+type makes call_indirect trap ("function signature mismatch").

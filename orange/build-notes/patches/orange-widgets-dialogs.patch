@@ -1,0 +1,104 @@
+--- /tmp/orig_data_widgets/owcolor.py	2026-11-10 07:56:26.308253913 +0900
++++ Orange/widgets/data/owcolor.py	2026-11-10 07:56:31.095644799 +0900
+@@ -4,7 +4,7 @@
+ 
+ import numpy as np
+ 
+-from AnyQt.QtCore import Qt, QSize, QAbstractTableModel, QModelIndex, QTimer, \
++from AnyQt.QtCore import Qt, QSize, QAbstractTableModel, QModelIndex, QTimer, QPersistentModelIndex, \
+     QSettings
+ from AnyQt.QtGui import QColor, QFont, QBrush
+ from AnyQt.QtWidgets import QHeaderView, QColorDialog, QTableView, QComboBox, \
+@@ -495,10 +495,18 @@
+         color = self.model().data(index, ColorRole)
+         if color is None:
+             return
+-        dlg = QColorDialog(QColor(*color))
+-        if dlg.exec():
+-            color = dlg.selectedColor()
+-            self.model().setData(index, color.getRgb(), ColorRole)
++        dlg = QColorDialog(QColor(*color), self)
++        pindex = QPersistentModelIndex(index)
++
++        # web build: dialogs cannot block, continue when the user answers
++        def on_finished(status):
++            if status and pindex.isValid():
++                self.model().setData(QModelIndex(pindex),
++                                     dlg.selectedColor().getRgb(), ColorRole)
++            dlg.deleteLater()
++        self._web_color_dialog = dlg
++        dlg.finished.connect(on_finished)
++        dlg.open()
+ 
+ 
+ class ContinuousTable(ColorTable):
+--- /tmp/orig_data_widgets/oweditdomain.py	2026-11-10 07:56:26.308409925 +0900
++++ Orange/widgets/data/oweditdomain.py	2026-11-10 07:56:26.328771034 +0900
+@@ -1534,24 +1534,29 @@
+             sizeGripEnabled=True,
+         )
+         dlg.setWindowModality(Qt.WindowModal)
+-        status = dlg.exec()
+-        dlg.deleteLater()
+-        self.merge_dialog_settings[self.var] = dlg.get_dialog_settings()
+ 
+-        rows = (model.index(i, 0) for i in range(model.rowCount()))
++        # web build: dialogs cannot block, continue when the user answers
++        def on_finished(status):
++            dlg.deleteLater()
++            self.merge_dialog_settings[self.var] = dlg.get_dialog_settings()
+ 
+-        def complete_merge(text, merge_attributes):
+-            # write the new text for edit role in all rows
+-            with disconnected(model.dataChanged, self.on_values_changed):
+-                for row in rows:
+-                    if row.data(SourceNameRole) in merge_attributes:
+-                        model.setData(row, text, Qt.EditRole)
+-            self.variable_changed.emit()
++            rows = (model.index(i, 0) for i in range(model.rowCount()))
+ 
+-        if status == QDialog.Accepted:
+-            complete_merge(
+-                dlg.get_merged_value_name(), dlg.get_merge_attributes()
+-            )
++            def complete_merge(text, merge_attributes):
++                # write the new text for edit role in all rows
++                with disconnected(model.dataChanged, self.on_values_changed):
++                    for row in rows:
++                        if row.data(SourceNameRole) in merge_attributes:
++                            model.setData(row, text, Qt.EditRole)
++                self.variable_changed.emit()
++
++            if status == QDialog.Accepted:
++                complete_merge(
++                    dlg.get_merged_value_name(), dlg.get_merge_attributes()
++                )
++        self._web_merge_dialog = dlg
++        dlg.finished.connect(on_finished)
++        dlg.open()
+ 
+     def _rename_selected_categories(self):
+         """
+--- /tmp/orig_data_widgets/owfeatureconstructor.py	2026-11-10 07:56:26.308445956 +0900
++++ Orange/widgets/data/owfeatureconstructor.py	2026-11-10 07:56:26.327375292 +0900
+@@ -835,10 +835,17 @@
+             "The widget currently runs in compatibility mode. After "
+             "expressions are updated, manually check for their correctness.")
+         dlg.addButton("Update", QMessageBox.ApplyRole)
+-        dlg.addButton("Cancel", QMessageBox.RejectRole)
+-        if dlg.exec() == QMessageBox.RejectRole:
+-            return
++        cancel = dlg.addButton("Cancel", QMessageBox.RejectRole)
+ 
++        # web build: dialogs cannot block, continue when the user answers
++        def on_finished(_):
++            if dlg.clickedButton() is not cancel:
++                self._fix_expressions_apply()
++        self._web_fix_dialog = dlg
++        dlg.finished.connect(on_finished)
++        dlg.open()
++
++    def _fix_expressions_apply(self):
+         def fixer(mo):
+             var = domain[mo.group(2)]
+             if mo.group(3) == ".value":  # uses string; remove `.value`

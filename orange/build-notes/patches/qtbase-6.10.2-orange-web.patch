@@ -1,0 +1,61 @@
+diff --git a/src/corelib/kernel/qeventdispatcher_wasm.cpp b/src/corelib/kernel/qeventdispatcher_wasm.cpp
+index f7edf328..e9646eff 100644
+--- a/src/corelib/kernel/qeventdispatcher_wasm.cpp
++++ b/src/corelib/kernel/qeventdispatcher_wasm.cpp
+@@ -7,6 +7,8 @@
+ #include <QtCore/qthread.h>
+ #include <QtCore/qscopedvaluerollback.h>
+ #include <QtCore/private/qobject_p.h>
++#include <QtCore/private/qthread_p.h>
++#include <QtCore/qeventloop.h>
+ #include <QtCore/private/qwasmglobal_p.h>
+ #include <QtCore/private/qstdweb_p.h>
+ #include <QtCore/private/qwasmsocket_p.h>
+@@ -375,11 +377,13 @@ void QEventDispatcherWasm::handleNonAsyncifyErrorCases(QEventLoop::ProcessEvents
+         emscripten_set_main_loop([](){
+             emscripten_pause_main_loop();
+         }, 0, simulateInfiniteLoop);
+-    } else if (flags & QEventLoop::DialogExec) {
+-        qFatal() << "Calling exec() is not supported on Qt for WebAssembly in this configuration. Please build"
+-                << "with asyncify support, or use an asynchronous API like QDialog::open()";
+-    } else if (flags & QEventLoop::WaitForMoreEvents) {
+-        qFatal("QEventLoop::WaitForMoreEvents is not supported on the main thread without asyncify");
++    } else if (flags & (QEventLoop::DialogExec | QEventLoop::WaitForMoreEvents)) {
++        // Orange web build: a nested event loop cannot block here. Instead of
++        // aborting the whole application, make the innermost loop return
++        // immediately; dialogs and menus stay open and work asynchronously.
++        QThreadData *data = QThreadData::current();
++        if (!data->eventLoops.isEmpty())
++            data->eventLoops.top()->exit(-1);
+     }
+ }
+ 
+diff --git a/src/gui/kernel/qdrag.cpp b/src/gui/kernel/qdrag.cpp
+index 4e707e49..393cf577 100644
+--- a/src/gui/kernel/qdrag.cpp
++++ b/src/gui/kernel/qdrag.cpp
+@@ -225,6 +225,11 @@ Qt::DropAction QDrag::exec(Qt::DropActions supportedActions)
+ Qt::DropAction QDrag::exec(Qt::DropActions supportedActions, Qt::DropAction defaultDropAction)
+ {
+     Q_D(QDrag);
++#ifdef Q_OS_WASM
++    // Orange web build: synchronous drag needs a blocking event loop.
++    Q_UNUSED(supportedActions); Q_UNUSED(defaultDropAction);
++    return Qt::IgnoreAction;
++#endif
+     if (!d->data) {
+         qWarning("QDrag: No mimedata set before starting the drag");
+         return d->executed_action;
+diff --git a/src/plugins/platforms/wasm/qwasmintegration.cpp b/src/plugins/platforms/wasm/qwasmintegration.cpp
+index 7ece025b..350c7023 100644
+--- a/src/plugins/platforms/wasm/qwasmintegration.cpp
++++ b/src/plugins/platforms/wasm/qwasmintegration.cpp
+@@ -284,7 +284,7 @@ QVariant QWasmIntegration::styleHint(QPlatformIntegration::StyleHint hint) const
+ {
+     switch (hint) {
+     case ShowIsFullScreen:
+-        return true;
++        return false; // Orange web: open windows normally (floating), not fullscreen
+     case UnderlineShortcut:
+         return platform() != Platform::MacOS;
+     default:
