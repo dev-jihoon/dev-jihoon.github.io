@@ -23,6 +23,12 @@
 <div id="loading"><div style="font-size:20px;font-weight:600">Orange</div><div id="bar"><div></div></div><div id="status">Loading</div><div style="color:#999;font-size:12px">The first visit may take a minute or two. Later visits are faster.</div><div id="err"></div></div>
 <script type="module">
 import { loadPyodide } from "./pyodide.mjs";
+// Packages Orange needs before its window can open
+const STARTUP_PACKAGES = ["numpy", "scipy", "scikit-learn", "pandas", "bottleneck", "joblib",
+  "threadpoolctl", "requests", "pyyaml", "httpx", "xlrd", "pygments", "packaging",
+  "python-dateutil", "pytz", "sqlite3", "ssl", "lzma"];
+// Packages only a few widgets use; loaded in the background once Orange is up
+const LATER_PACKAGES = ["networkx"];
 // Browser file helpers used from Python (webpatches.py)
 const picker = document.createElement("input");
 picker.type = "file"; picker.style.display = "none"; document.body.appendChild(picker);
@@ -48,28 +54,37 @@ window.orangeWebDownload = (name, data) => {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 };
-const st = (msg, pct) => { document.getElementById("status").textContent = msg; if (pct != null) document.querySelector("#bar>div").style.width = pct + "%"; console.log("[boot]", msg); };
+const st = (msg, pct) => { document.getElementById("status").textContent = msg; if (pct != null) document.querySelector("#bar>div").style.width = pct + "%"; console.log("[boot]", (performance.now()/1000).toFixed(1) + "s", msg); };
 try {
   st("Loading Python", 5);
+  // Start downloading Orange and the font right away, in parallel with Python
+  const tarP = fetch("./orange-sp.tar").then(r => r.arrayBuffer());
+  const fontP = fetch("./NanumGothic.ttf").then(r => r.arrayBuffer());
+  const bootP = fetch("./boot.py?" + Date.now()).then(r => r.text());
+  const patchP = fetch("./webpatches.py?" + Date.now()).then(r => r.text());
+  const regP = fetch("./widget-registry.pck").then(r => r.ok ? r.arrayBuffer() : null).catch(() => null);
   const py = await loadPyodide({ indexURL: "./" });
   window.py = py;
   st("Loading packages", 25);
-  await py.loadPackage(["numpy", "scipy", "scikit-learn", "pandas", "bottleneck", "joblib",
-    "threadpoolctl", "networkx", "requests", "pyyaml", "httpx", "xlrd", "pygments", "packaging",
-    "python-dateutil", "pytz", "matplotlib", "sqlite3", "ssl", "lzma"]);
+  await py.loadPackage(STARTUP_PACKAGES);
   st("Loading Orange", 70);
-  const tar = await (await fetch("./orange-sp.tar")).arrayBuffer();
+  const tar = await tarP;
   py.unpackArchive(tar, "tar", { extractDir: "/lib/python3.13/site-packages" });
-  const boot = await (await fetch("./boot.py?" + Date.now())).text();
+  const boot = await bootP;
   py._module.qtContainerElements = [document.getElementById("qt")];
   st("Starting", 90);
   py.FS.writeFile("/boot.py", boot);
   py.FS.mkdirTree("/fonts");
-  py.FS.writeFile("/fonts/NanumGothic.ttf", new Uint8Array(await (await fetch("./NanumGothic.ttf")).arrayBuffer()));
-  py.FS.writeFile("/webpatches.py", await (await fetch("./webpatches.py?" + Date.now())).text());
+  py.FS.writeFile("/fonts/NanumGothic.ttf", new Uint8Array(await fontP));
+  py.FS.writeFile("/webpatches.py", await patchP);
+  const reg = await regP;
+  if (reg) py.FS.writeFile("/widget-registry.pck", new Uint8Array(reg));
   await py.runPythonAsync(`exec(compile(open('/boot.py').read(), 'boot.py', 'exec'), {'__name__': '__main__'})`);
   document.getElementById("loading").style.display = "none";
-  console.log("[boot] ready");
+  console.log("[boot] ready", (performance.now()/1000).toFixed(1) + "s");
+  py.loadPackage(LATER_PACKAGES, { messageCallback: () => {} })
+    .then(() => console.log("[boot] background packages loaded", (performance.now()/1000).toFixed(1) + "s"))
+    .catch((e) => console.log("[boot] background packages failed " + e));
   const q = new URLSearchParams(location.search);
   if (q.get("test")) {
     const code = await (await fetch("./" + q.get("test") + "?" + Date.now())).text();

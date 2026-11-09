@@ -1,0 +1,18 @@
+--- /tmp/mplexp.orig	2026-11-10 08:25:39.343865718 +0900
++++ orangewidget/utils/matplotlib_export.py	2026-11-10 08:25:39.354992018 +0900
+@@ -2,7 +2,14 @@
+ 
+ import numpy as np
+ 
+-from matplotlib.colors import to_hex
++try:
++    from matplotlib.colors import to_hex
++except ImportError:  # web build ships without matplotlib
++    def to_hex(c, keep_alpha=False):
++        vals = [int(round(255 * float(x))) for x in c]
++        if not keep_alpha:
++            vals = vals[:3]
++        return "#" + "".join("%02x" % v for v in vals)
+ from pyqtgraph.graphicsItems.ScatterPlotItem import ScatterPlotItem
+ from AnyQt.QtCore import Qt
+ from AnyQt.QtGui import QPen, QBrush

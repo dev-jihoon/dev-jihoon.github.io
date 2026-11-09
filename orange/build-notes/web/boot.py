@@ -279,8 +279,18 @@ try:
     from contextlib import ExitStack
     main = om.OMain()
     main.stack = ExitStack()
-    main.parse_arguments(["orange-canvas", "--no-splash", "--no-welcome"])
+    # A widget registry built ahead of time (same Orange version) lets us
+    # skip widget discovery, which would import every widget module.
+    _prebuilt_registry = os.path.exists("/widget-registry.pck")
+    main.parse_arguments(["orange-canvas", "--no-splash", "--no-welcome"]
+                         + (["--no-discovery"] if _prebuilt_registry else []))
     main.activate_default_config()
+    if _prebuilt_registry:
+        import shutil
+        from orangecanvas import config as _occonfig
+        os.makedirs(_occonfig.cache_dir(), exist_ok=True)
+        shutil.copy("/widget-registry.pck",
+                    os.path.join(_occonfig.cache_dir(), "widget-registry.pck"))
     main.setup_application()
     log("application created")
     # Korean glyphs: Qt's built-in web fonts have no Hangul

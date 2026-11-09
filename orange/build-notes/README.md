@@ -6,7 +6,7 @@
 툴체인: conda-forge emscripten 4.0.9 / clang 21 / binaryen 121
 PyQt6를 Pyodide에 정적으로 넣는 방법은 github.com/JarrettSJohnson/pyodide-with-pyqt6 (GPL)을 참고해 이 환경에 맞게 고쳤다.
 
-순서: build_qt.sh → (Pyodide CPython 빌드) → build_pyqt.sh → build_link.sh → build_orange_ext.sh → make_deploy.sh
+순서: build_qt.sh → (Pyodide CPython 빌드) → build_pyqt.sh → build_link.sh → build_orange_ext.sh → getreg.py(위젯 목록 미리 만들기) → make_deploy.sh
 
 ## 고친 것
 - patches/qtbase-6.10.2-orange-web.patch
@@ -20,3 +20,10 @@ PyQt6를 Pyodide에 정적으로 넣는 방법은 github.com/JarrettSJohnson/pyo
   확인창(저장할까요?, 연결 편집, 워크플로 정보, 설정)도 exec() 대신 open()+finished로 이어서 실행
 - patches/orange-widgets-dialogs.patch: Feature Constructor, Edit Domain(값 합치기), Color(색 고르기) 대화상자를 같은 방식으로 수정
 - Orange의 Cython 확장은 numpy 2.2 헤더로 다시 cythonize 후 emcc로 side module 빌드
+
+## 로딩 시간 줄인 것 (make_deploy.sh)
+- 표준 라이브러리, 패키지, 오렌지를 전부 .pyc로 미리 컴파일 (브라우저에서 컴파일 안 함)
+- 위젯 목록(widget-registry.pck)을 미리 만들어 두고 --no-discovery로 시작 (위젯 모듈 100여 개를 시작할 때 import 안 함)
+- matplotlib 빼고(patches/orangewidget-matplotlib-optional.patch), networkx는 화면이 뜬 뒤 백그라운드로 로드
+- 파이썬 로딩과 동시에 오렌지/폰트/위젯 목록 다운로드 시작
+- 모든 파일을 빌드별로 Cache Storage에 저장해서 두 번째 접속부터는 네트워크를 거의 안 씀
