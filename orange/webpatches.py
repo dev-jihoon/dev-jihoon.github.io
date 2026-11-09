@@ -437,6 +437,36 @@ def patch_file_widget():
     owfile.OWFile.browse_file = browse_file
 
 
+def patch_save_graph():
+    """The save-image button of plot widgets: pick PNG or SVG, then download."""
+    import tempfile
+    from AnyQt.QtWidgets import QMenu
+    from AnyQt.QtGui import QCursor
+    from orangewidget.utils import saveplot
+
+    def save_plot(data, file_formats, start_dir="", filename=""):
+        writers = [w for w in file_formats
+                   if any(ext in (".png", ".svg") for ext in getattr(w, "EXTENSIONS", ()))]
+        menu = QMenu()
+        for writer in writers:
+            ext = writer.EXTENSIONS[0]
+            act = menu.addAction("%s (*%s)" % (writer.DESCRIPTION, ext))
+
+            def save(_=False, writer=writer, ext=ext):
+                name = (os.path.splitext(os.path.basename(filename))[0] or "graph") + ext
+                path = os.path.join(tempfile.gettempdir(), name)
+                try:
+                    writer.write(path, data)
+                    browser_save_file(path, name)
+                except Exception:
+                    traceback.print_exc()
+            act.triggered.connect(save)
+        _alive.add(menu)
+        menu.aboutToHide.connect(lambda: QTimer.singleShot(0, lambda: _alive.discard(menu)))
+        menu.popup(QCursor.pos())
+    saveplot.save_plot = save_plot
+
+
 def patch_canvas_files(mainwindow_cls):
     import tempfile
     from AnyQt.QtWidgets import QMessageBox, QDialog
@@ -581,7 +611,7 @@ def install_unload_guard(mainwindow):
 
 def apply_all(mainwindow_cls):
     for fn in (patch_menus, patch_interactions, patch_link_dialogs,
-               patch_toolbox_drag, patch_file_widget):
+               patch_toolbox_drag, patch_file_widget, patch_save_graph):
         try:
             fn()
         except Exception:

@@ -1,0 +1,64 @@
+--- a/Orange/clustering/louvain.py	2026-11-10 08:43:43.659392133 +0900
++++ Orange/clustering/louvain.py	2026-11-10 08:45:53.907880652 +0900
+@@ -6,10 +6,8 @@
+ """
+ 
+ import numpy as np
+-import networkx as nx
+ # NOTE: The ``community`` package might be renamed in the near future, see
+ # GH issue https://github.com/taynaud/python-louvain/issues/23
+-from community import best_partition
+ from sklearn.base import BaseEstimator
+ from sklearn.neighbors import NearestNeighbors
+ 
+@@ -17,6 +15,23 @@
+ from Orange.data import Table
+ 
+ 
++def best_partition(*args, **kwargs):
++    # imported on first use: `community` needs networkx, which the web
++    # build loads after startup
++    from community import best_partition as _best_partition
++    return _best_partition(*args, **kwargs)
++
++
++class _LazyNetworkX:
++    """networkx is imported on first use (the web build loads it later)."""
++    def __getattr__(self, name):
++        import networkx
++        return getattr(networkx, name)
++
++
++nx = _LazyNetworkX()
++
++
+ __all__ = ["Louvain", "matrix_to_knn_graph"]
+ 
+ 
+--- a/Orange/widgets/unsupervised/owlouvainclustering.py	2026-11-10 08:43:43.660688937 +0900
++++ Orange/widgets/unsupervised/owlouvainclustering.py	2026-11-10 08:43:51.955497795 +0900
+@@ -8,7 +8,6 @@
+ 
+ import numpy as np
+ import scipy.sparse as sp
+-import networkx as nx
+ 
+ from AnyQt.QtCore import (
+     Qt, QObject, QTimer, pyqtSignal as Signal, pyqtSlot as Slot
+@@ -30,6 +29,16 @@
+ from Orange.widgets.utils.widgetpreview import WidgetPreview
+ from Orange.widgets.widget import Msg
+ 
++
++class _LazyNetworkX:
++    """networkx is imported on first use (the web build loads it later)."""
++    def __getattr__(self, name):
++        import networkx
++        return getattr(networkx, name)
++
++
++nx = _LazyNetworkX()
++
+ try:
+     from orangecontrib.network.network import Network
+ except ImportError:
