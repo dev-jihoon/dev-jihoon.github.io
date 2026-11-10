@@ -10,7 +10,7 @@ S=$W/site; D=$W/deploy/orange
 PYHOST=/home/claude/cenv/bin/python
 rm -rf $W/deploy; mkdir -p $D
 cd $S
-cp pyodide.mjs pyodide.js pyodide.asm.js pyodide.asm.wasm python_stdlib.zip boot.py webpatches.py NanumGothic.ttf $D/
+cp pyodide.mjs pyodide.js pyodide.asm.js pyodide.asm.wasm python_stdlib.zip boot.py webpatches.py NanumGothic.ttf winfonts.tar $D/
 
 # 1. packages + lock file
 python3 - <<'PY'
@@ -62,7 +62,7 @@ layer = '''// Fetch layer:
 //    load from the device instead of the network
 const BUILD = "%s";
 const CACHE_NAME = "orange-web-" + BUILD;
-const GZ = ["pyodide.asm.wasm", "orange-sp.tar", "NanumGothic.ttf"];
+const GZ = ["pyodide.asm.wasm", "orange-sp.tar", "NanumGothic.ttf", "winfonts.tar"];
 const _fetch = window.fetch.bind(window);
 let cacheP = null;
 try { cacheP = caches.open(CACHE_NAME).catch(() => null); } catch (e) { cacheP = Promise.resolve(null); }
@@ -102,6 +102,6 @@ print("build", build)
 PY
 
 cd $D
-for f in pyodide.asm.wasm orange-sp.tar NanumGothic.ttf; do gzip -9 -n -f $f; done
+for f in pyodide.asm.wasm orange-sp.tar NanumGothic.ttf winfonts.tar; do gzip -9 -n -f $f; done
 touch .nojekyll
 du -sh $D; find $D -size +24M

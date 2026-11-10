@@ -47,3 +47,19 @@ PyQt6를 Pyodide에 정적으로 넣는 방법은 github.com/JarrettSJohnson/pyo
 - 주소 뒤에 ?touchdebug 를 붙이면 손가락 위치(파랑)와 Qt가 받은 위치(빨강/초록)를 점으로 표시
 - 사파리 두 번 탭/핀치 확대 막기, 키보드 때문에 밀린 페이지 스크롤 되돌리기 (web/orange.html)
 - 확인용 스크립트: tests/touch3.py, tests/touch4.py (크롬 터치 에뮬레이션, 35개 항목)
+
+## 윈도우 11 모양 (Orange 윈도우 설치판과 같게)
+- Orange 윈도우 설치판은 PyQt6 6.8.1을 쓰고, 윈도우 11에서는 Qt의 `windows11` 스타일로 그려짐
+- 그 스타일 소스(Qt 6.8.1 qwindows11style.cpp)를 QtWidgets 안에 넣고(`src/widgets/styles/winemu/`), 윈도우 전용인 Vista 스타일 자리에는 같은 크기·힌트에 그림만 QPainter로 흉내 낸 대신 클래스를 둠
+- 글꼴: Segoe UI 대신 크기가 같은 Selawik(마이크로소프트, OFL), 스타일이 쓰는 Segoe Fluent Icons 대신 같은 코드 포인트에 Fluent UI System Icons(마이크로소프트, MIT)로 만든 아이콘 글꼴 (fonts/make_icon_font.py) → web/winfonts.tar
+- 색: 밝은 테마 고정(아이패드 다크 모드여도), 윈도우 기본 강조색
+- 창 테두리·제목 줄: 윈도우 11처럼 30px 흰 제목 줄, 최소화/최대화/닫기(빨강) 버튼, 둥근 모서리와 그림자 (web/orange.html의 WIN11_FRAMES), 제목 뒤에 " - Orange", 대화상자는 닫기만
+- 셀 편집기처럼 버튼을 누른 채 코드로 연 콤보 목록이 손을 떼자마자 닫히지 않게 (qcombobox.cpp)
+
+## 막히던 대화상자 (webpatches.patch_modal_dialogs 등)
+- 저장 대화상자: 바로 임시 경로를 주고, 파일이 써지면 다운로드 (Save Data, Save Workflow Image as SVG 등)
+- 열기 대화상자·질문 상자: 브라우저 파일 창/상자를 띄우고, 답하면 그 슬롯을 다시 실행해서 그때 답을 돌려줌
+- 알림만 하는 상자는 막지 않고 띄움, 그 밖의 exec() 대화상자도 보이게 유지
+- CSV File Import, Open Recent, Example Workflows는 따로 비동기로
+- 오류가 나면 Orange의 "Error Encountered" 상자 (인터넷 없을 때의 윈도우판과 같음), 네트워크 소켓은 바로 실패
+- 확인용: tests/dlgtest.py

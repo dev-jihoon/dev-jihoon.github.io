@@ -43,12 +43,53 @@
   }, { passive: false, capture: true });
   document.addEventListener("touchmove", (e) => { if (e.touches.length > 1) e.preventDefault(); },
                             { passive: false, capture: true });
+  // Windows 11 look for Qt's window frames (title bar, caption buttons, border)
+  const glyph = (body, color) => `url("data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10' fill='none' stroke='${color}' stroke-width='1' shape-rendering='crispEdges'>${body}</svg>`)}")`;
+  const G = {
+    min: "<path d='M0 5.5H10'/>",
+    max: "<rect x='0.5' y='0.5' width='9' height='9'/>",
+    restore: "<rect x='0.5' y='2.5' width='7' height='7'/><path d='M2.5 2.5V0.5H9.5V7.5H7.5'/>",
+    close: "<path d='M0 0L10 10M10 0L0 10' shape-rendering='geometricPrecision'/>",
+  };
+  const WIN11_FRAMES = `
+    .qt-screen { --border-width: 1px; }
+    .qt-decorated-window { background-color: #fff; }
+    .qt-decorated-window.has-border { border: 1px solid rgba(0,0,0,.28); border-radius: 8px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.26), 0 0 6px rgba(0,0,0,.10); }
+    .qt-decorated-window.has-border.inactive { border-color: rgba(0,0,0,.18);
+      box-shadow: 0 4px 16px rgba(0,0,0,.16), 0 0 4px rgba(0,0,0,.08); }
+    .qt-decorated-window.has-border.maximized { border-radius: 0; border-color: transparent; box-shadow: none; }
+    .qt-decorated-window.has-border:not(.maximized) > .qt-window { border-radius: 0 0 7px 7px; }
+    .title-bar { height: 30px; padding: 0; background: #fff; border-radius: 7px 7px 0 0; }
+    .qt-decorated-window.maximized .title-bar { border-radius: 0; }
+    .qt-decorated-window.inactive .title-bar { opacity: 1; }
+    .title-bar .window-name { font: 12px Selawik, "Segoe UI", sans-serif; color: #000; padding-left: 2px; }
+    .qt-decorated-window.inactive .title-bar .window-name { color: #6e6e6e; }
+    .title-bar .window-icon { width: 16px; height: 16px; margin-left: 8px; }
+    .title-bar .window-icon img { width: 16px; height: 16px; background-size: 16px 16px; }
+    .title-bar .image-button.minimize, .title-bar .image-button.maximize,
+    .title-bar .image-button.restore, .title-bar .image-button.close {
+      width: 46px; height: 30px; background: no-repeat center / 10px 10px; transition: background-color .1s; }
+    .title-bar .image-button.minimize img, .title-bar .image-button.maximize img,
+    .title-bar .image-button.restore img, .title-bar .image-button.close img { display: none; }
+    .title-bar .minimize { background-image: ${glyph(G.min, "#000")} !important; }
+    .title-bar .maximize { background-image: ${glyph(G.max, "#000")} !important; }
+    .title-bar .restore { background-image: ${glyph(G.restore, "#000")} !important; }
+    .title-bar .close { background-image: ${glyph(G.close, "#000")} !important; }
+    .qt-decorated-window.inactive .title-bar .image-button { opacity: .45; }
+    .title-bar .minimize:hover, .title-bar .maximize:hover, .title-bar .restore:hover { background-color: rgba(0,0,0,.06); }
+    .title-bar .minimize:active, .title-bar .maximize:active, .title-bar .restore:active { background-color: rgba(0,0,0,.10); }
+    .title-bar .close:hover { background-color: #c42b1c; background-image: ${glyph(G.close, "#fff")} !important; opacity: 1; }
+    .title-bar .close:active { background-color: #c84031; background-image: ${glyph(G.close, "#fff")} !important; }
+    .qt-decorated-window:not(.maximized) .title-bar .close { border-top-right-radius: 7px; }
+  `;
   // Qt draws into canvases inside its shadow DOM; page CSS does not reach them
   const iv = setInterval(() => {
     const root = document.getElementById("qt-shadow-container")?.shadowRoot;
     if (!root) return;
     const st = document.createElement("style");
-    st.textContent = "* { touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; }";
+    st.textContent = "* { touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; }" + WIN11_FRAMES;
     root.appendChild(st);
     clearInterval(iv);
   }, 500);
@@ -68,9 +109,9 @@ import { loadPyodide } from "./pyodide.mjs";
 //  - big files are stored gzip-compressed and decompressed here
 //  - every file is kept in Cache Storage for this build, so later visits
 //    load from the device instead of the network
-const BUILD = "5ce0407dc09b";
+const BUILD = "ad7b416cd485";
 const CACHE_NAME = "orange-web-" + BUILD;
-const GZ = ["pyodide.asm.wasm", "orange-sp.tar", "NanumGothic.ttf"];
+const GZ = ["pyodide.asm.wasm", "orange-sp.tar", "NanumGothic.ttf", "winfonts.tar"];
 const _fetch = window.fetch.bind(window);
 let cacheP = null;
 try { cacheP = caches.open(CACHE_NAME).catch(() => null); } catch (e) { cacheP = Promise.resolve(null); }
@@ -194,6 +235,7 @@ try {
   // Start downloading Orange and the font right away, in parallel with Python
   const tarP = fetch("./orange-sp.tar").then(r => r.arrayBuffer());
   const fontP = fetch("./NanumGothic.ttf").then(r => r.arrayBuffer());
+  const winFontsP = fetch("./winfonts.tar").then(r => r.arrayBuffer());
   const bootP = fetch("./boot.py").then(r => r.text());
   const patchP = fetch("./webpatches.py").then(r => r.text());
   const regP = fetch("./widget-registry.pck").then(r => r.ok ? r.arrayBuffer() : null).catch(() => null);
@@ -210,6 +252,11 @@ try {
   py.FS.writeFile("/boot.py", boot);
   py.FS.mkdirTree("/fonts");
   py.FS.writeFile("/fonts/NanumGothic.ttf", new Uint8Array(await fontP));
+  // Windows look: Selawik (metric-compatible with Segoe UI) and the icon font
+  py.unpackArchive(await winFontsP, "tar", { extractDir: "/fonts" });
+  for (const [file, weight] of [["selawk.ttf", "400"], ["selawksb.ttf", "600"], ["selawkb.ttf", "700"]]) {
+    try { document.fonts.add(new FontFace("Selawik", py.FS.readFile("/fonts/" + file).buffer, { weight })); } catch (e) {}
+  }
   py.FS.writeFile("/webpatches.py", await patchP);
   const reg = await regP;
   if (reg) py.FS.writeFile("/widget-registry.pck", new Uint8Array(reg));

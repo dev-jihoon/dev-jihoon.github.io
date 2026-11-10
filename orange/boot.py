@@ -245,6 +245,17 @@ for _m in ("QtCore", "QtGui", "QtWidgets", "QtSvg", "QtSvgWidgets", "QtXml"):
         _mod.__file__ = "/lib/python3.13/PyQt6/%s.abi3.so" % _m
 sys.argv = ["orange-canvas"]
 
+# No raw network sockets in the browser. Fail at once like an offline computer
+# (Orange then behaves as on Windows without internet) instead of letting
+# Emscripten try a WebSocket and wait.
+import socket as _socket
+def _no_net(*a, **k):
+    raise OSError(101, "Network is unreachable")
+_socket.socket.connect = _no_net
+_socket.socket.connect_ex = lambda *a, **k: 101
+_socket.create_connection = _no_net
+_socket.getaddrinfo = lambda *a, **k: (_ for _ in ()).throw(_socket.gaierror(-3, "Temporary failure in name resolution"))
+
 log("shims installed")
 
 # ---------------------------------------------------------------------------
@@ -293,6 +304,7 @@ try:
                     os.path.join(_occonfig.cache_dir(), "widget-registry.pck"))
     main.setup_application()
     log("application created")
+    log("style", webpatches.apply_windows_look())
     # Korean glyphs: Qt's built-in web fonts have no Hangul
     from PyQt6.QtGui import QFontDatabase
     from PyQt6.QtCore import QChar

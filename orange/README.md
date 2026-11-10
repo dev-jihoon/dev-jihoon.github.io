@@ -39,3 +39,9 @@
 ## 라이선스
 
 Orange3, PyQt6는 GPL-3.0, Qt는 LGPL-3.0/GPL, Pyodide는 MPL-2.0, 나눔고딕은 OFL-1.1입니다. 수정한 내용과 빌드 스크립트는 `build-notes/` 폴더에 있습니다.
+
+## 화면
+- 윈도우 11에서 Orange를 연 것과 같은 모양으로 보이게 했습니다 (버튼, 콤보박스, 메뉴, 창 제목 줄).
+- 저장(Save Data, Save Workflow Image as SVG 등)을 하면 파일이 다운로드됩니다.
+
+글꼴: Selawik (Microsoft, SIL OFL 1.1), 아이콘: Fluent UI System Icons (Microsoft, MIT). 라이선스 파일은 winfonts.tar 안에 있습니다.

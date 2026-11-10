@@ -1,7 +1,7 @@
 # Patches that make Orange's blocking UI flows work in a single-threaded
 # browser build where nested event loops (menu.exec(), dialog.exec(),
 # drag.exec()) return immediately.
-import logging, os, traceback
+import logging, os, sys, traceback
 from AnyQt.QtCore import Qt, QObject, QEvent, QPoint, QPointF, QTimer, QMimeData
 from AnyQt.QtWidgets import QApplication, QLabel, QGraphicsView, QWidget
 
@@ -874,7 +874,9 @@ def apply_touch_tweaks(mainwindow):
 
 def apply_all(mainwindow_cls):
     for fn in (patch_menus, patch_interactions, patch_link_dialogs,
-               patch_toolbox_drag, patch_file_widget, patch_save_graph):
+               patch_toolbox_drag, patch_file_widget, patch_save_graph,
+               patch_dialog_exec, patch_modal_dialogs, patch_error_reporting,
+               patch_save_svg, patch_canvas_dialogs, patch_csv_import):
         try:
             fn()
         except Exception:
@@ -913,3 +915,417 @@ def apply_touch_debug():
     _touch_debug = _TouchDebug()
     QApplication.instance().installEventFilter(_touch_debug)
     return True
+
+
+def apply_windows_look():
+    """Look like Orange on Windows 11: Qt 6.8's "windows11" style (built into
+    this Qt), Selawik for Segoe UI (same metrics), light colors with the
+    default Windows accent, as Orange's Windows installer (PyQt6 6.8) shows."""
+    from AnyQt.QtGui import QFontDatabase, QFont, QPalette, QColor, QGuiApplication
+    for f in ("selawk.ttf", "selawksb.ttf", "selawkb.ttf", "OrangeWebFluentIcons.otf"):
+        QFontDatabase.addApplicationFont("/fonts/" + f)
+    app = QApplication.instance()
+    try:
+        QGuiApplication.styleHints().setColorScheme(Qt.ColorScheme.Light)
+    except AttributeError:
+        pass
+    font = QFont("Selawik")
+    font.setPointSizeF(9)
+    app.setFont(font)
+    pal = app.palette()
+    # Windows default accent; controls use AccentDark1 in light mode
+    pal.setColor(QPalette.ColorRole.Accent, QColor(0x00, 0x5F, 0xB8))
+    pal.setColor(QPalette.ColorRole.Link, QColor(0x00, 0x3E, 0x92))
+    pal.setColor(QPalette.ColorRole.LinkVisited, QColor(0x00, 0x1A, 0x68))
+    pal.setColor(QPalette.ColorRole.HighlightedText, QColor(0xFF, 0xFF, 0xFF))
+    app.setPalette(pal)
+    app.setStyle("windows11")
+    return app.style().objectName()
+
+
+# ---------------------------------------------------------------------------
+# Every other modal dialog: QFileDialog, QMessageBox
+# ---------------------------------------------------------------------------
+# exec() and the static QFileDialog / QMessageBox helpers return at once in the
+# browser, so code waiting for an answer would get "Cancel". These replacements
+#  - save dialogs: answer at once with a fresh temporary path and download the
+#    file when the calling code has written it;
+#  - open dialogs and questions: show the browser file picker / the message
+#    box, and when the user answers, run the Qt slot that asked again; this
+#    time the dialog answers at once with what the user chose.
+# Message boxes that only inform are shown without blocking.
+
+SAVE_DIR = "/home/pyodide/save"
+_pending = {}        # kind -> answer for the replayed call
+_replaying = [0]
+
+
+def _calling_slot(skip=2):
+    """Return a callable that repeats the outermost Python method call on the
+    stack (the slot Qt called), or None."""
+    import inspect
+    from AnyQt.QtCore import QEvent as _QEvent
+    f = sys._getframe(skip)
+    frames = []
+    while f is not None:
+        frames.append(f)
+        f = f.f_back
+    for fr in reversed(frames):
+        self_ = fr.f_locals.get("self")
+        if self_ is None or isinstance(self_, QApplication):
+            continue
+        if fr.f_globals.get("__name__", "").startswith(("_pyodide", "pyodide")):
+            continue
+        name = fr.f_code.co_name
+        if name.startswith("__") or name in ("event", "eventFilter", "notify") or name.endswith("Event"):
+            continue
+        try:
+            meth = getattr(self_, name)
+        except Exception:
+            continue
+        func = getattr(meth, "__func__", None)
+        if func is None:
+            continue
+        try:
+            func = inspect.unwrap(func)
+        except Exception:
+            pass
+        if getattr(func, "__code__", None) is not fr.f_code:
+            continue
+        co = fr.f_code
+        n, k = co.co_argcount, co.co_kwonlyargcount
+        loc = fr.f_locals
+        names = co.co_varnames[1:n]
+        if any(isinstance(loc.get(a), _QEvent) for a in names):
+            continue
+        args = [loc[a] for a in names if a in loc]
+        kw = {a: loc[a] for a in co.co_varnames[n:n + k] if a in loc}
+        if co.co_flags & inspect.CO_VARARGS:
+            args += list(loc.get(co.co_varnames[n + k], ()))
+        return lambda: meth(*args, **kw)
+    return None
+
+
+def _replay_with(kind, answer, replay):
+    _pending[kind] = answer
+    _replaying[0] += 1
+    try:
+        replay()
+    except Exception:
+        traceback.print_exc()
+    finally:
+        _replaying[0] -= 1
+        _pending.pop(kind, None)
+
+
+def _filter_exts(filter_str):
+    """'Tab (*.tab);;CSV (*.csv *.txt)' -> ['.tab', '.csv', '.txt']; [] if any."""
+    import re
+    exts = []
+    for pat in re.findall(r"\*(\.[\w.]+|)", filter_str or ""):
+        if not pat:
+            return []
+        exts.append(pat.lower())
+    return exts
+
+
+def _filter_for(filter_str, path):
+    for f in (filter_str or "").split(";;"):
+        exts = _filter_exts(f)
+        if not exts or any(path.lower().endswith(e) for e in exts):
+            return f
+    return ""
+
+
+def _new_save_path(name, filter_str="", default_suffix=""):
+    import tempfile
+    name = os.path.basename(name or "") or "untitled"
+    exts = _filter_exts(filter_str)
+    if not os.path.splitext(name)[1]:
+        if exts:
+            name += exts[0]
+        elif default_suffix:
+            name += "." + default_suffix.lstrip(".")
+    os.makedirs(SAVE_DIR, exist_ok=True)
+    return os.path.join(tempfile.mkdtemp(dir=SAVE_DIR), name)
+
+
+def _download_when_written(path):
+    def check():
+        try:
+            if os.path.exists(path) and os.path.getsize(path) > 0:
+                browser_save_file(path, os.path.basename(path))
+        except Exception:
+            traceback.print_exc()
+    QTimer.singleShot(0, check)
+
+
+def _ask_open(filter_str, multi, replay):
+    accept = ",".join(_filter_exts(filter_str))
+
+    def got(path):
+        answer = ([path] if multi else path, _filter_for(filter_str, path))
+        _replay_with("open", answer, replay)
+    browser_open_file(accept, got)
+
+
+def patch_modal_dialogs():
+    from AnyQt.QtWidgets import QFileDialog, QMessageBox, QDialog
+
+    # ---- QFileDialog static helpers
+    def getSaveFileName(parent=None, caption="", directory="", filter="",
+                        initialFilter="", options=None, **kw):
+        path = _new_save_path(directory, initialFilter or filter.split(";;")[0])
+        _download_when_written(path)
+        return path, initialFilter or _filter_for(filter, path)
+
+    def _open(multi):
+        def get(parent=None, caption="", directory="", filter="",
+                initialFilter="", options=None, **kw):
+            if "open" in _pending:
+                return _pending.pop("open")
+            replay = _calling_slot(2)
+            if replay is not None:
+                _ask_open(filter, multi, replay)
+            return ([] if multi else ""), ""
+        return staticmethod(get)
+
+    QFileDialog.getSaveFileName = staticmethod(getSaveFileName)
+    QFileDialog.getOpenFileName = _open(False)
+    QFileDialog.getOpenFileNames = _open(True)
+
+    # ---- QFileDialog instances
+    def fd_exec(self):
+        filters = ";;".join(self.nameFilters())
+        if self.acceptMode() == QFileDialog.AcceptMode.AcceptSave:
+            sel = self.selectedFiles()
+            path = _new_save_path(sel[0] if sel else "", self.selectedNameFilter(),
+                                  self.defaultSuffix())
+            self.selectedFiles = lambda: [path]
+            QDialog.done(self, QDialog.DialogCode.Accepted)
+            _download_when_written(path)
+            return QDialog.DialogCode.Accepted
+        if "open" in _pending:
+            paths, flt = _pending.pop("open")
+            paths = paths if isinstance(paths, list) else [paths]
+            self.selectedFiles = lambda: list(paths)
+            if flt:
+                self.selectedNameFilter = lambda: flt
+            QDialog.done(self, QDialog.DialogCode.Accepted)
+            return QDialog.DialogCode.Accepted
+        replay = _calling_slot(2)
+        multi = self.fileMode() == QFileDialog.FileMode.ExistingFiles
+        if replay is not None:
+            _ask_open(filters, multi, replay)
+        QDialog.done(self, QDialog.DialogCode.Rejected)
+        return QDialog.DialogCode.Rejected
+    QFileDialog.exec = fd_exec
+    QFileDialog.exec_ = fd_exec
+
+    # ---- QMessageBox
+    Std = QMessageBox.StandardButton
+    NEGATIVE = (Std.Cancel, Std.No, Std.Abort, Std.Ignore, Std.Close, Std.Discard)
+
+    def _is_question(box):
+        return len(box.buttons()) > 1
+
+    def _negative(box):
+        esc = box.escapeButton()
+        if esc is not None and box.standardButton(esc) != Std.NoButton:
+            return box.standardButton(esc)
+        for b in NEGATIVE:
+            if box.button(b) is not None:
+                return b
+        btns = box.buttons()
+        return box.standardButton(btns[-1]) if btns else Std.Ok
+
+    def _show_box(box, on_answer=None):
+        box.setWindowModality(Qt.WindowModality.WindowModal if box.parent() is not None
+                              else Qt.WindowModality.ApplicationModal)
+        _alive.add(box)
+
+        def finished(_r):
+            QTimer.singleShot(0, lambda: _alive.discard(box))
+            if on_answer is not None:
+                btn = box.clickedButton()
+                text = btn.text() if btn is not None else None
+                std = box.standardButton(btn) if btn is not None else _negative(box)
+                on_answer(std, text)
+        box.finished.connect(finished)
+        box.show()
+        box.raise_()
+
+    def mb_exec(self):
+        if "mbox" in _pending:
+            std, text = _pending.pop("mbox")
+            match = [b for b in self.buttons() if b.text() == text]
+            if match:
+                self.clickedButton = lambda m=match[0]: m
+            return int(std.value) if hasattr(std, "value") else int(std)
+        if not _is_question(self):
+            _show_box(self)
+            btns = self.buttons()
+            return int(self.standardButton(btns[0]).value) if btns else int(Std.Ok.value)
+        replay = _calling_slot(2)
+        if replay is None:
+            _show_box(self)
+        else:
+            _show_box(self, lambda std, text: _replay_with("mbox", (std, text), replay))
+        neg = _negative(self)
+        return int(neg.value)
+    QMessageBox.exec = mb_exec
+    QMessageBox.exec_ = mb_exec
+
+    def _static(icon, question=False):
+        def f(parent, title, text, buttons=None, defaultButton=Std.NoButton):
+            if buttons is None:
+                buttons = (Std.Yes | Std.No) if question else Std.Ok
+            box = QMessageBox(icon, title, text, buttons, parent)
+            if defaultButton != Std.NoButton:
+                box.setDefaultButton(defaultButton)
+            r = box.exec()
+            return Std(r)
+        return staticmethod(f)
+    QMessageBox.information = _static(QMessageBox.Icon.Information)
+    QMessageBox.warning = _static(QMessageBox.Icon.Warning)
+    QMessageBox.critical = _static(QMessageBox.Icon.Critical)
+    QMessageBox.question = _static(QMessageBox.Icon.Question, question=True)
+
+    def about(parent, title, text):
+        box = QMessageBox(QMessageBox.Icon.Information, title, text, Std.Ok, parent)
+        _show_box(box)
+    QMessageBox.about = staticmethod(about)
+
+
+def patch_error_reporting():
+    """An exception shows Orange's "Error Encountered" box (what Orange shows on
+    Windows without internet) without blocking, and never tries to reach the
+    report server."""
+    from orangewidget.workflow import errorreporting
+    errorreporting.internet_on = lambda: False
+
+
+def patch_save_svg():
+    """File > Save Workflow Image as SVG: write the SVG and download it."""
+    from orangecanvas.application.canvasmain import CanvasMainWindow
+    from orangecanvas.canvas import scene as _scene
+
+    def save_as_svg(self):
+        doc = self.current_document()
+        path = doc.path()
+        base = os.path.splitext(os.path.basename(path))[0] if path else "untitled"
+        out = _new_save_path(base + ".svg")
+        try:
+            content = _scene.grab_svg(doc.scene())
+            with open(out, "wt", encoding="utf-8") as f:
+                f.write(content)
+            browser_save_file(out, os.path.basename(out))
+        except Exception:
+            traceback.print_exc()
+    CanvasMainWindow.save_as_svg = save_as_svg
+
+
+def patch_dialog_exec():
+    """Any other dialog shown with exec(): show it (window-modal) and keep it
+    alive until it closes, instead of leaving a modal window behind."""
+    from AnyQt.QtWidgets import QDialog
+
+    def exec_(self):
+        dialog_async(self)
+        return int(QDialog.DialogCode.Rejected.value)
+    QDialog.exec = exec_
+    QDialog.exec_ = exec_
+
+
+def patch_canvas_dialogs():
+    """File > Open Recent and Help > Example Workflows."""
+    from AnyQt.QtWidgets import QDialog
+    from AnyQt.QtCore import QSettings
+    from orangecanvas.application import canvasmain as cm
+    from orangecanvas.preview import previewdialog, previewmodel
+    from orangecanvas.utils.settings import QSettings_readArray
+    from orangecanvas import config
+
+    def _show_preview(self, title, items, on_choose):
+        dialog = previewdialog.PreviewDialog(self)
+        model = previewmodel.PreviewModel(dialog, items=items)
+        dialog.setWindowTitle(title)
+        template = ('<h3 style="font-size: 26px">\n' + ('{0}\n' + '</h3>'))
+        dialog.setHeading(template.format(title))
+        dialog.setModel(model)
+        model.delayedScanUpdate()
+
+        def done(status):
+            index = dialog.currentIndex()
+            dialog.deleteLater()
+            if status == QDialog.DialogCode.Accepted and index >= 0:
+                on_choose(model.item(index).path())
+        dialog_async(dialog, done)
+        return QDialog.DialogCode.Rejected
+
+    def recent_scheme(self):
+        settings = QSettings()
+        recent_items = QSettings_readArray(
+            settings, "mainwindow/recent-items", {"title": (str, ""), "path": (str, "")})
+        recent = [cm.RecentItem(**item) for item in recent_items]
+        recent = [item for item in recent if os.path.exists(item.path)]
+        items = [previewmodel.PreviewItem(name=item.title, path=item.path) for item in recent]
+        return _show_preview(self, self.tr(cm._tr.m[200, "Recent Workflows"]), items,
+                             self.open_scheme_file)
+
+    def examples_dialog(self):
+        tutors = cm.examples.workflows(config.default)
+        items = [previewmodel.PreviewItem(path=t.abspath()) for t in tutors]
+        return _show_preview(self, self.tr(cm._tr.m[201, "Example Workflows"]), items,
+                             self.open_example_scheme)
+
+    cm.CanvasMainWindow.recent_scheme = recent_scheme
+    cm.CanvasMainWindow.examples_dialog = examples_dialog
+
+
+def patch_csv_import():
+    """CSV File Import: pick the file in the browser, then the Import Options
+    dialog, without blocking."""
+    from AnyQt.QtWidgets import QDialog
+    from Orange.widgets.data import owcsvimport as M
+
+    def browse(self, prefixname=None, directory=None):
+        dlg = self._browse_dialog()
+        filters = ";;".join(dlg.nameFilters())
+        formats = list(dlg.fileFormats())
+        dlg.deleteLater()
+
+        def picked(path):
+            flt = _filter_for(filters, path)
+            names = [M.FileDialog.filterStr(f) for f in formats]
+            selected_filter = formats[names.index(flt)] if flt in names else formats[0]
+            self.dialog_state["directory"] = os.path.dirname(path)
+            self.dialog_state["filter"] = M.FileDialog.filterStr(selected_filter)
+            if prefixname:
+                _prefixpath = self._replacements().get(prefixname, "")
+                if not M.isprefixed(_prefixpath, path):
+                    self._path_must_be_relative_mb(_prefixpath).show()
+                    return
+                varpath = M.VarPath(prefixname, os.path.relpath(path, _prefixpath))
+            else:
+                varpath = M.PathItem.AbsPath(path)
+            options = M.default_options_for_mime_type(path, selected_filter.mime_type)
+            items = self.itemsFromSettings()
+            idx = M.index_where(items, lambda t: M.samepath(t[0], path))
+            if idx is not None:
+                _, options_ = items[idx]
+                if options_ is not None:
+                    options = options_
+            d = M.CSVImportDialog(self, windowTitle="Import Options", sizeGripEnabled=True)
+            d.setWindowModality(Qt.WindowModality.WindowModal)
+            d.setPath(path)
+            d.setOptions(options)
+
+            def done(status):
+                d.deleteLater()
+                if status == QDialog.DialogCode.Accepted:
+                    self.set_selected_file(path, d.options())
+                    self.current_item().setVarPath(varpath)
+            dialog_async(d, done)
+        browser_open_file(",".join(_filter_exts(filters)), picked)
+    M.OWCSVFileImport.browse = browse
