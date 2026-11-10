@@ -1,0 +1,17 @@
+--- a/Orange/widgets/utils/domaineditor.py	2026-11-10 10:47:59.518427573 +0900
++++ b/Orange/widgets/utils/domaineditor.py	2026-11-10 10:47:59.523271999 +0900
+@@ -155,8 +155,12 @@
+             # pylint: disable=no-self-argument,attribute-defined-outside-init
+             def hidePopup(me):
+                 if me.popup_shown:
+-                    self.view.model().setData(
+-                        index, me.highlighted_text, Qt.EditRole)
++                    # web/touch: there is no hover, so take the item the
++                    # finger pressed (the popup view's current item)
++                    cur = me.view().currentIndex()
++                    text = cur.data() if cur.isValid() else me.highlighted_text
++                    if text is not None:
++                        self.view.model().setData(index, text, Qt.EditRole)
+                     self.popup_shown = False
+                 super().hidePopup()
+                 self.view.closeEditor(me, self.NoHint)

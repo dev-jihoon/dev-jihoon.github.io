@@ -46,6 +46,49 @@ index 4e707e49..393cf577 100644
      if (!d->data) {
          qWarning("QDrag: No mimedata set before starting the drag");
          return d->executed_action;
+diff --git a/src/plugins/platforms/wasm/qwasminputcontext.cpp b/src/plugins/platforms/wasm/qwasminputcontext.cpp
+index 282559ec..753cc22b 100644
+--- a/src/plugins/platforms/wasm/qwasminputcontext.cpp
++++ b/src/plugins/platforms/wasm/qwasminputcontext.cpp
+@@ -213,11 +213,28 @@ QWasmInputContext::~QWasmInputContext()
+ {
+ }
+ 
++
++// Orange web build: on touch devices an item view (list/table) that has an
++// editable current cell accepts input methods so typing starts editing; on
++// an iPad that brings up the on-screen keyboard whenever such a view is
++// tapped. Only real text editors should bring up the keyboard there.
++static bool webAcceptsInputMethod(bool accepted)
++{
++    if (!accepted)
++        return false;
++    static const bool touch =
++        emscripten::val::global("navigator")["maxTouchPoints"].as<int>() > 0;
++    if (!touch)
++        return true;
++    QObject *focus = QGuiApplication::focusObject();
++    return !(focus && focus->inherits("QAbstractItemView"));
++}
++
+ void QWasmInputContext::update(Qt::InputMethodQueries queries)
+ {
+     qCDebug(qLcQpaWasmInputContext) << Q_FUNC_INFO << queries;
+ 
+-    if ((queries & Qt::ImEnabled) && (inputMethodAccepted() != m_inputMethodAccepted)) {
++    if ((queries & Qt::ImEnabled) && (webAcceptsInputMethod(inputMethodAccepted()) != m_inputMethodAccepted)) {
+         if (m_focusObject && !m_preeditString.isEmpty())
+             commitPreeditAndClear();
+         updateInputElement();
+@@ -260,7 +277,7 @@ void QWasmInputContext::updateGeometry()
+ 
+ void QWasmInputContext::updateInputElement()
+ {
+-    m_inputMethodAccepted = inputMethodAccepted();
++    m_inputMethodAccepted = webAcceptsInputMethod(inputMethodAccepted());
+ 
+     // Mobile devices can dismiss keyboard/IME and focus is still on input.
+     // Successive clicks on the same input should open the keyboard/IME.
 diff --git a/src/plugins/platforms/wasm/qwasmintegration.cpp b/src/plugins/platforms/wasm/qwasmintegration.cpp
 index 7ece025b..350c7023 100644
 --- a/src/plugins/platforms/wasm/qwasmintegration.cpp
@@ -76,7 +119,7 @@ index b9340f31..5c94f381 100644
  }
  
 diff --git a/src/plugins/platforms/wasm/qwasmwindow.cpp b/src/plugins/platforms/wasm/qwasmwindow.cpp
-index a3222e51..faeddbc8 100644
+index a3222e51..42878f0c 100644
 --- a/src/plugins/platforms/wasm/qwasmwindow.cpp
 +++ b/src/plugins/platforms/wasm/qwasmwindow.cpp
 @@ -97,7 +97,14 @@ QWasmWindow::QWasmWindow(QWindow *w, QWasmDeadKeySupport *deadKeySupport,
@@ -95,3 +138,38 @@ index a3222e51..faeddbc8 100644
      m_focusHelper["style"].set("position", "absolute");
      m_focusHelper["style"].set("left", 0);
      m_focusHelper["style"].set("top", 0);
+@@ -489,6 +496,15 @@ void QWasmWindow::setVisible(bool visible)
+ #if QT_CONFIG(accessibility)
+         QWasmAccessibility::onShowWindow(window());
+ #endif
++        // Orange web build: activate a window when it is shown, like a
++        // desktop window manager does (see onSubtreeChanged).
++        const auto flags = window()->flags();
++        const bool notToolOrPopup = ((flags & Qt::ToolTip) != Qt::ToolTip)
++                && ((flags & Qt::Popup) != Qt::Popup);
++        const QVariant noActivate = window()->property("_q_showWithoutActivating");
++        if (notToolOrPopup && (!noActivate.isValid() || !noActivate.toBool())
++                && window()->isTopLevel())
++            requestActivateWindow();
+     }
+ }
+ 
+diff --git a/src/plugins/platforms/wasm/qwasmwindowtreenode.inc b/src/plugins/platforms/wasm/qwasmwindowtreenode.inc
+index c5a228d7..26c88a9a 100644
+--- a/src/plugins/platforms/wasm/qwasmwindowtreenode.inc
++++ b/src/plugins/platforms/wasm/qwasmwindowtreenode.inc
+@@ -42,9 +42,13 @@ template<class Window>
+ void QWasmWindowTreeNode<Window>::onSubtreeChanged(QWasmWindowTreeNodeChangeType changeType,
+                                            QWasmWindowTreeNode *parent, Window *child)
+ {
++    // Orange web build: creating the platform window of a hidden window
++    // (QWidget::create()) must not make it the active window; activation of
++    // newly shown windows happens in QWasmWindow::setVisible().
+     if (changeType == QWasmWindowTreeNodeChangeType::NodeInsertion && parent == this
+         && m_childStack.topWindow()
+-        && m_childStack.topWindow()->window()) {
++        && m_childStack.topWindow()->window()
++        && m_childStack.topWindow()->window()->isVisible()) {
+ 
+         const auto flags = m_childStack.topWindow()->window()->flags();
+         const bool notToolOrPopup = ((flags & Qt::ToolTip) != Qt::ToolTip) && ((flags & Qt::Popup) != Qt::Popup);

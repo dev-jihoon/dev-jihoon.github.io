@@ -622,28 +622,74 @@ def is_touch_device():
 class _TouchTweaks(QObject):
     """App-wide event filter used on touch devices:
 
-    - scroll lists, tables and panels by dragging a finger (QScroller)
+    - scroll lists and tables by dragging a finger (taps still click)
+    - a combo box pop-up ignores taps in its first moments, so the second
+      tap of a double tap does not pick an item right away
     - text fields only take focus when tapped, so the on-screen keyboard
       does not appear when a window opens
     - tapping the arrows of a spin box steps the value without focusing
       its text field (which would bring up the keyboard)
+    - touch and hold opens the context menu (e.g. Remove a widget or link
+      on the canvas), as a right click would
     """
+    LONG_PRESS_MS = 550
+    LONG_PRESS_SLOP = 12
+
     def __init__(self):
         super().__init__()
         from AnyQt.QtWidgets import (
-            QAbstractScrollArea, QGraphicsView, QLineEdit, QAbstractSpinBox,
+            QAbstractItemView, QGraphicsView, QLineEdit, QAbstractSpinBox,
             QTextEdit, QPlainTextEdit, QComboBox)
+        from AnyQt.QtGui import QInputDevice
         self._done = set()
-        self.QAbstractScrollArea = QAbstractScrollArea
-        self.QGraphicsView = QGraphicsView
+        self.QAbstractItemView = QAbstractItemView
         self.text_types = (QLineEdit, QAbstractSpinBox, QTextEdit, QPlainTextEdit)
         self.QComboBox = QComboBox
         self.QAbstractSpinBox = QAbstractSpinBox
+        self.TouchScreen = QInputDevice.DeviceType.TouchScreen
         try:
             from AnyQt.QtWidgets import QScroller
             self.QScroller = QScroller
         except ImportError:
             self.QScroller = None
+        self._scroll = None   # finger scrolling state for an item view
+        self._replaying = False
+        self._hold_timer = QTimer(self, singleShot=True, interval=self.LONG_PRESS_MS)
+        self._hold_timer.timeout.connect(self._long_press)
+        self._hold_pos = None
+        self._popup_shown_at = None   # QElapsedTimer of the last combo pop-up
+        self._swallow_release = False
+
+    POPUP_GRACE_MS = 400
+
+    def _popup_guard(self, obj, ev, t):
+        """Ignore touch taps that reach a combo pop-up right after it opened."""
+        if t == QEvent.Show and isinstance(obj, QWidget) and \
+                obj.metaObject().className() == "QComboBoxPrivateContainer":
+            from AnyQt.QtCore import QElapsedTimer
+            self._popup_shown_at = QElapsedTimer()
+            self._popup_shown_at.start()
+            return False
+        if t == QEvent.MouseButtonRelease and self._swallow_release:
+            self._swallow_release = False
+            return True
+        if t in (QEvent.MouseButtonPress, QEvent.MouseButtonDblClick) \
+                and self._popup_shown_at is not None and self._is_touch(ev) \
+                and isinstance(obj, QWidget) \
+                and obj.window().metaObject().className() == "QComboBoxPrivateContainer" \
+                and self._popup_shown_at.elapsed() < self.POPUP_GRACE_MS:
+            self._swallow_release = True
+            return True
+        return False
+
+    @staticmethod
+    def _in_combo_popup(w):
+        p = w.parentWidget()
+        while p is not None:
+            if p.metaObject().className() == "QComboBoxPrivateContainer":
+                return True
+            p = p.parentWidget()
+        return False
 
     def _setup(self, w):
         key = id(w)
@@ -657,27 +703,127 @@ class _TouchTweaks(QObject):
                 w.setFocusPolicy(Qt.ClickFocus)
         if isinstance(w, self.QAbstractSpinBox):
             # Tapping the arrows must not focus the spin box (that brings up
-            # the keyboard). The spin box itself takes no focus; its text
-            # field still does when tapped, and forwards focus to it.
+            # the keyboard). The spin box itself takes no focus; tapping its
+            # number focuses it explicitly (see eventFilter).
             w.setFocusPolicy(Qt.NoFocus)
             w.setAttribute(Qt.WA_AcceptTouchEvents, True)
-        if self.QScroller is not None and isinstance(w, self.QAbstractScrollArea) \
-                and not isinstance(w, self.QGraphicsView) \
-                and not isinstance(w, (self.QAbstractSpinBox,)):
+        if isinstance(w, self.QAbstractItemView) and not self._in_combo_popup(w):
+            # smooth finger scrolling (see eventFilter)
+            w.setVerticalScrollMode(self.QAbstractItemView.ScrollMode.ScrollPerPixel)
+            w.setHorizontalScrollMode(self.QAbstractItemView.ScrollMode.ScrollPerPixel)
+
+    def _is_touch(self, ev):
+        try:
+            return ev.device().type() == self.TouchScreen
+        except Exception:
+            return False
+
+    def _long_press(self):
+        from AnyQt.QtGui import QContextMenuEvent
+        if self._hold_pos is None:
+            return
+        gpos = self._hold_pos
+        self._hold_pos = None
+        if self._scroll is not None:
+            self._scroll["cancel"] = True   # no click after the menu
+        target = QApplication.widgetAt(gpos)
+        if target is None:
+            return
+        ev = QContextMenuEvent(QContextMenuEvent.Reason.Mouse,
+                               target.mapFromGlobal(gpos), gpos)
+        QApplication.sendEvent(target, ev)
+
+    def _item_view_of_viewport(self, obj):
+        p = obj.parent() if isinstance(obj, QWidget) else None
+        if isinstance(p, self.QAbstractItemView) and p.viewport() is obj \
+                and not self._in_combo_popup(p):
+            return p
+        return None
+
+    def _finger_scroll(self, obj, ev, t):
+        """Drag a finger over a list/table to scroll it.
+
+        The press is held back until the finger lifts: if it moved, the
+        gesture was a scroll and the view never sees the press (so nothing
+        gets selected); if it did not, the press (and a double click) is
+        replayed before the release, so taps work as clicks."""
+        if self._replaying:
+            return False
+        if t == QEvent.MouseButtonPress and self._is_touch(ev):
+            view = self._item_view_of_viewport(obj)
+            if view is None:
+                return False
+            gp = ev.globalPosition()
+            self._scroll = dict(view=view, viewport=obj, start=gp, last=gp,
+                                active=False, cancel=False,
+                                pending=[self._copy_mouse(ev)])
+            return True
+        st = self._scroll
+        if st is None or obj is not st["viewport"]:
+            return False
+        if t == QEvent.MouseButtonDblClick:
+            st["pending"].append(self._copy_mouse(ev))
+            return True
+        if t == QEvent.MouseMove:
+            gp = ev.globalPosition()
+            d0 = gp - st["start"]
+            if not st["active"] and (abs(d0.x()) > 10 or abs(d0.y()) > 10):
+                st["active"] = True
+            if st["active"]:
+                d = gp - st["last"]
+                st["last"] = gp
+                view = st["view"]
+                vs, hs = view.verticalScrollBar(), view.horizontalScrollBar()
+                vs.setValue(vs.value() - int(round(d.y())))
+                hs.setValue(hs.value() - int(round(d.x())))
+            return True
+        if t == QEvent.MouseButtonRelease:
+            self._scroll = None
+            if st["active"] or st["cancel"]:
+                return True
+            self._replaying = True
             try:
-                self.QScroller.grabGesture(
-                    w.viewport(), self.QScroller.ScrollerGestureType.TouchGesture)
-            except Exception:
-                pass
+                for e in st["pending"]:
+                    QApplication.sendEvent(obj, e)
+            finally:
+                self._replaying = False
+            return False
+        return False
+
+    @staticmethod
+    def _copy_mouse(ev):
+        from AnyQt.QtGui import QMouseEvent
+        return QMouseEvent(ev.type(), ev.position(), ev.scenePosition(),
+                           ev.globalPosition(), ev.button(), ev.buttons(),
+                           ev.modifiers(), ev.pointingDevice())
 
     def eventFilter(self, obj, ev):
         t = ev.type()
+        if self._popup_guard(obj, ev, t):
+            return True
         if t == QEvent.Show and isinstance(obj, QWidget):
             self._setup(obj)
-        elif t == QEvent.MouseButtonPress and \
+        elif t == QEvent.MouseButtonPress and self._is_touch(ev) and not self._replaying:
+            if not self._hold_timer.isActive():
+                self._hold_pos = ev.globalPosition().toPoint()
+                self._hold_timer.start()
+        elif t == QEvent.MouseMove and self._hold_timer.isActive():
+            d = ev.globalPosition().toPoint() - self._hold_pos
+            if abs(d.x()) > self.LONG_PRESS_SLOP or abs(d.y()) > self.LONG_PRESS_SLOP:
+                self._hold_timer.stop()
+                self._hold_pos = None
+        elif t == QEvent.MouseButtonRelease:
+            self._hold_timer.stop()
+            self._hold_pos = None
+        if t in (QEvent.MouseButtonPress, QEvent.MouseButtonDblClick,
+                 QEvent.MouseMove, QEvent.MouseButtonRelease) \
+                and self._finger_scroll(obj, ev, t):
+            return True
+
+        if t == QEvent.MouseButtonPress and \
                 isinstance(obj.parent() if isinstance(obj, QWidget) else None,
                            self.QAbstractSpinBox):
-            # mouse/trackpad click in the text part of a spin box
+            # click/tap in the text part of a spin box
             obj.parent().setFocus(Qt.MouseFocusReason)
         elif t in (QEvent.TouchBegin, QEvent.TouchUpdate, QEvent.TouchEnd) \
                 and isinstance(obj, self.QAbstractSpinBox):

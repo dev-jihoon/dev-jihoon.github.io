@@ -15,11 +15,14 @@ PyQt6를 Pyodide에 정적으로 넣는 방법은 github.com/JarrettSJohnson/pyo
   - QDrag::exec()는 바로 IgnoreAction 반환
   - 터치 기기에서는 창 포커스용 숨은 요소를 contenteditable로 만들지 않음 (아이패드 키보드가 계속 뜨던 문제)
   - 두 번 탭 인정 거리 30px, 더블클릭 간격 500ms
+  - 터치 기기에서 목록·표(QAbstractItemView)에 포커스가 가도 키보드를 띄우지 않음
+  - 숨겨 둔 위젯 창이 다른 창 변화 때문에 저절로 다시 나타나지 않게, 창을 보일 때 활성화
 - patches/pyqt6-qaction-setmenu.txt: QAction.setMenu 함수 타입 불일치 수정
 - patches/anyqt-fixes.patch: ctypes로 Qt 공유 라이브러리를 못 찾을 때 대체 구현
 - web/boot.py: 스레드 대체(QThread/QThreadPool/ThreadPoolExecutor를 동기 실행), 없는 Qt 모듈 스텁, 한글 폰트, exec() 없이 캔버스 시작
 - web/webpatches.py: 퀵메뉴·위젯 끌어놓기·파일 열기/저장을 비동기(브라우저 업로드/다운로드)로 바꿈.
   확인창(저장할까요?, 연결 편집, 워크플로 정보, 설정)도 exec() 대신 open()+finished로 이어서 실행
+- patches/orange-domaineditor-touch.patch: File 위젯 Type/Role 콤보에서 마우스 hover 없이 탭한 항목으로 값 바꾸기 (전에는 None이 들어가 Apply가 아무 일도 안 함)
 - patches/orange-widgets-dialogs.patch: Feature Constructor, Edit Domain(값 합치기), Color(색 고르기) 대화상자를 같은 방식으로 수정
 - Orange의 Cython 확장은 numpy 2.2 헤더로 다시 cythonize 후 emcc로 side module 빌드
 
@@ -31,7 +34,10 @@ PyQt6를 Pyodide에 정적으로 넣는 방법은 github.com/JarrettSJohnson/pyo
 - 모든 파일을 빌드별로 Cache Storage에 저장해서 두 번째 접속부터는 네트워크를 거의 안 씀
 
 ## 터치 기기 (webpatches.apply_touch_tweaks)
-- 목록·표·설정 패널을 손가락으로 끌어서 스크롤 (QScroller)
+- 목록·표를 손가락으로 끌면 스크롤. 누름은 손을 뗄 때까지 미뤘다가 움직이지 않았으면 그때 클릭으로 전달 (스크롤하다 행이 선택되지 않게)
+- 콤보 목록이 열린 직후 0.4초 동안의 탭은 무시 (두 번 탭의 두 번째 탭이 바로 항목을 골라 버리지 않게)
+- 길게 누르기(0.55초) = 오른쪽 클릭 → 위젯/연결의 메뉴에서 Remove 등
 - 글자 입력칸은 직접 탭할 때만 포커스 (창이 열릴 때 키보드가 뜨지 않게)
 - 스핀박스 화살표를 탭하면 값만 바뀌고 키보드는 안 뜸, 숫자 부분을 탭하면 입력
 - 메인 창을 맨 아래로 고정해서 캔버스를 탭해도 위젯 창이 뒤로 숨지 않음 (모든 기기)
+- 확인용 스크립트: tests/touch3.py, tests/touch4.py (크롬 터치 에뮬레이션, 32개 항목)
