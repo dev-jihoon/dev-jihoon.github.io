@@ -185,7 +185,7 @@ index b9340f31..5c94f381 100644
  }
  
 diff --git a/src/plugins/platforms/wasm/qwasmwindow.cpp b/src/plugins/platforms/wasm/qwasmwindow.cpp
-index a3222e51..5d7eba80 100644
+index a3222e51..43237aa1 100644
 --- a/src/plugins/platforms/wasm/qwasmwindow.cpp
 +++ b/src/plugins/platforms/wasm/qwasmwindow.cpp
 @@ -40,6 +40,69 @@ QT_BEGIN_NAMESPACE
@@ -291,7 +291,18 @@ index a3222e51..5d7eba80 100644
      QWasmOpenGLContext::destroyWebGLContext(this);
  
  #if QT_CONFIG(accessibility)
-@@ -489,6 +562,15 @@ void QWasmWindow::setVisible(bool visible)
+@@ -326,6 +399,10 @@ void QWasmWindow::onMaximizeClicked()
+ 
+ void QWasmWindow::onToggleMaximized()
+ {
++    // Orange web build: as on Windows, double-clicking the title bar does not
++    // maximize a window that has no maximize button (fixed-size dialogs)
++    if (!m_state.testFlag(Qt::WindowMaximized) && !hasMaximizeButton())
++        return;
+     window()->setWindowState(m_state.testFlag(Qt::WindowMaximized) ? Qt::WindowNoState
+                                                                    : Qt::WindowMaximized);
+ }
+@@ -489,6 +566,15 @@ void QWasmWindow::setVisible(bool visible)
  #if QT_CONFIG(accessibility)
          QWasmAccessibility::onShowWindow(window());
  #endif
@@ -307,7 +318,7 @@ index a3222e51..5d7eba80 100644
      }
  }
  
-@@ -563,10 +645,15 @@ void QWasmWindow::setWindowFlags(Qt::WindowFlags flags)
+@@ -563,10 +649,15 @@ void QWasmWindow::setWindowFlags(Qt::WindowFlags flags)
      dom::syncCSSClassWith(m_decoratedWindow, "has-border", hasBorder());
      dom::syncCSSClassWith(m_decoratedWindow, "has-shadow", hasShadow());
      dom::syncCSSClassWith(m_decoratedWindow, "has-title", hasTitleBar());
@@ -323,7 +334,7 @@ index a3222e51..5d7eba80 100644
      m_nonClientArea->titleBar()->setCloseVisible(m_flags.testFlag(Qt::WindowCloseButtonHint));
  }
  
-@@ -596,13 +683,14 @@ void QWasmWindow::setWindowState(Qt::WindowStates newState)
+@@ -596,13 +687,14 @@ void QWasmWindow::setWindowState(Qt::WindowStates newState)
  
  void QWasmWindow::setWindowTitle(const QString &title)
  {
@@ -340,7 +351,7 @@ index a3222e51..5d7eba80 100644
      if (pixmap.isNull()) {
          m_nonClientArea->titleBar()->setIcon(
                  Base64IconStore::get()->getIcon(Base64IconStore::IconType::QtLogo), "svg+xml");
-@@ -875,6 +963,9 @@ bool QWasmWindow::deliverPointerEvent(const PointerEvent &event)
+@@ -875,6 +967,9 @@ bool QWasmWindow::deliverPointerEvent(const PointerEvent &event)
  
      QWindowSystemInterface::TouchPoint *touchPoint;
  
@@ -350,7 +361,7 @@ index a3222e51..5d7eba80 100644
      QPointF pointInTargetWindowCoords =
              QPointF(window()->mapFromGlobal(targetPointClippedToScreen));
      QPointF normalPosition(pointInTargetWindowCoords.x() / window()->width(),
-@@ -966,8 +1057,12 @@ bool QWasmWindow::processWheel(const WheelEvent &event)
+@@ -966,8 +1061,12 @@ bool QWasmWindow::processWheel(const WheelEvent &event)
  Qt::WindowFlags QWasmWindow::fixTopLevelWindowFlags(Qt::WindowFlags flags) const
  {
      if (!(flags.testFlag(Qt::CustomizeWindowHint))) {
@@ -364,7 +375,7 @@ index a3222e51..5d7eba80 100644
                    |Qt::WindowMaximizeButtonHint|Qt::WindowCloseButtonHint;
          }
          if (flags.testFlag(Qt::Dialog) || flags.testFlag(Qt::Tool))
-@@ -1049,6 +1144,10 @@ bool QWasmWindow::hasShadow() const
+@@ -1049,6 +1148,10 @@ bool QWasmWindow::hasShadow() const
  
  bool QWasmWindow::hasMaximizeButton() const
  {
