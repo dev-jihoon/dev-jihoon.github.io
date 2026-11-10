@@ -129,6 +129,24 @@ json.dumps([p.x(), p.y()] if p else None)""")
         nodes = await py("json.dumps([n.title for n in T.scheme.nodes])")
         check("remove an opened widget: removed, no error", rm is not None and "Scatter Plot" not in nodes
               and not any("Error" in x for x in v), (rm, nodes, v))
+        # caption buttons by touch: minimize hides, maximize grows, close closes
+        await dtap(*s.node["t"])
+        await s.pg.wait_for_timeout(800)
+        BTN = """(cls) => { const r = document.getElementById('qt-shadow-container').shadowRoot;
+            const t = [...r.querySelectorAll('.title-bar')].find(t => t.querySelector('.window-name').innerText.startsWith('Data Table - ') && t.getBoundingClientRect().width > 0);
+            const b = t.querySelector('.' + cls).getBoundingClientRect(); return [b.x + b.width / 2, b.y + b.height / 2, b.width]; }"""
+        mxb = await s.pg.evaluate(BTN, "maximize")
+        await tap(mxb[0], mxb[1])
+        await s.pg.wait_for_timeout(800)
+        mx = await py(f"json.dumps(str({W.format('t')}.windowState()))")
+        check("tap maximize maximizes", "Maximized" in mx, (mx, mxb))
+        await py(f"{W.format('t')}.showNormal()\njson.dumps(1)")
+        await s.pg.wait_for_timeout(800)
+        mnb = await s.pg.evaluate(BTN, "minimize")
+        await tap(mnb[0], mnb[1])
+        await s.pg.wait_for_timeout(800)
+        hid = await py(f"json.dumps({W.format('t')}.isVisible())")
+        check("tap minimize hides the window", hid is False, hid)
         print("\nSUMMARY %d/%d" % (sum(res), len(res)))
         errs = [l for l in s.logs if "Traceback" in l]
         if errs:

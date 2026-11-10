@@ -57,6 +57,7 @@ PyQt6를 Pyodide에 정적으로 넣는 방법은 github.com/JarrettSJohnson/pyo
 - 셀 편집기처럼 버튼을 누른 채 코드로 연 콤보 목록이 손을 떼자마자 닫히지 않게 (qcombobox.cpp)
 - 편집기가 열린 칸은 글자를 그리지 않음 (이 스타일의 편집기 배경이 반투명이라 글자가 겹쳐 보였음)
 - 메뉴 막대: Qt 6.8의 10pt·32px 항목 대신 윈도우 데스크톱 앱처럼 흰 바탕, 앱 글꼴(9pt), 좌우 7px, 은은한 둥근 강조 / 단축키 밑줄은 윈도우 기본처럼 숨김 / 도킹된 Dock 제목은 Vista 스타일처럼
+- 창 제목 줄 버튼(최소화/최대화/닫기)은 click 대신 pointerup으로 동작 (아이패드 사파리는 pointerdown을 막으면 click을 안 보냄)
 - 크기가 고정된 대화상자(Edit Links 등)는 제목 줄을 두 번 눌러도 최대화되지 않음 (윈도우와 같게)
 - 메뉴·콤보 목록의 작고 진한 그림자 대신, 페이지가 윈도우 11 팝업처럼 부드러운 그림자를 그림 (팝업 창에 popup 클래스)
 
@@ -68,6 +69,10 @@ PyQt6를 Pyodide에 정적으로 넣는 방법은 github.com/JarrettSJohnson/pyo
 - 시작할 때 Orange의 Welcome 화면(New/Open/Recent/Examples...)을 띄움. "Show at startup" 선택은 브라우저 localStorage에 기억 (?test= 일 때는 안 띄움)
 - 오류가 나면 Orange의 "Error Encountered" 상자 (인터넷 없을 때의 윈도우판과 같음), 네트워크 소켓은 바로 실패
 - 확인용: tests/dlgtest.py
+
+## 배포
+- 브라우저나 GitHub Pages 캐시에 남은 예전 index.html이면, 새 index.html의 BUILD와 비교해서 한 번 새로고침
+- pyodide 패키지는 이미 올린 컴파일본을 다시 써서 커밋마다 수십 MB씩 바뀌지 않게, orange-sp.tar의 .pyc는 해시 기반으로 매번 같게
 
 ## t-SNE
 - openTSNE 1.0.4의 C++ 확장(quad_tree, _tsne, kl_divergence, matrix_mul(numpy FFT), annoy)을 build_opentsne.sh로 빌드해서 orange-sp.tar에 넣음 (전에는 가짜 모듈이라 t-SNE 위젯만 안 됐음)

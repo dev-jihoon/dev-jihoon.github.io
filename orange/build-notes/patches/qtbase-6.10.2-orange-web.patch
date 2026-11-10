@@ -399,10 +399,52 @@ index 8e6e5021..56dac1dc 100644
      bool processWheel(const WheelEvent &event);
      Qt::WindowFlags fixTopLevelWindowFlags(Qt::WindowFlags) const;
 diff --git a/src/plugins/platforms/wasm/qwasmwindownonclientarea.cpp b/src/plugins/platforms/wasm/qwasmwindownonclientarea.cpp
-index fcc824b1..8304f88a 100644
+index fcc824b1..3f28218b 100644
 --- a/src/plugins/platforms/wasm/qwasmwindownonclientarea.cpp
 +++ b/src/plugins/platforms/wasm/qwasmwindownonclientarea.cpp
-@@ -278,6 +278,18 @@ TitleBar::TitleBar(QWasmWindow *window, emscripten::val parentElement)
+@@ -54,21 +54,39 @@ void WebImageButton::setCallbacks(Callbacks callbacks)
+ {
+     if (callbacks) {
+         if (!m_webClickEventCallback) {
++            // Orange web build: act on pointerup over the button, not on
++            // "click". iPad Safari fires no click after a touch whose
++            // pointerdown was cancelled (preventDefault), so these buttons
++            // did nothing on iPad.
+             m_webMouseDownEventCallback = std::make_unique<qstdweb::EventCallback>(
+                     m_containerElement, "pointerdown", [this](emscripten::val event) {
+                         event.call<void>("preventDefault");
+                         event.call<void>("stopPropagation");
++                        m_pressedPointerId = event["pointerId"].as<int>();
+                         m_callbacks.onInteraction();
+                     });
+             m_webClickEventCallback = std::make_unique<qstdweb::EventCallback>(
+-                    m_containerElement, "click", [this](emscripten::val event) {
+-                        m_callbacks.onClick();
++                    m_containerElement, "pointerup", [this](emscripten::val event) {
++                        const int id = event["pointerId"].as<int>();
++                        const bool wasPressed = id == m_pressedPointerId;
++                        m_pressedPointerId = -1;
+                         event.call<void>("stopPropagation");
++                        if (!wasPressed)
++                            return;
++                        emscripten::val target = event["target"];
++                        if (!m_containerElement.call<bool>("contains", target))
++                            return;
++                        m_callbacks.onClick();
++                    });
++            m_webCancelEventCallback = std::make_unique<qstdweb::EventCallback>(
++                    m_containerElement, "pointercancel", [this](emscripten::val) {
++                        m_pressedPointerId = -1;
+                     });
+         }
+     } else {
+         m_webMouseDownEventCallback.reset();
+         m_webClickEventCallback.reset();
++        m_webCancelEventCallback.reset();
+     }
+     dom::syncCSSClassWith(m_containerElement, "action-button", !!callbacks);
+     m_callbacks = std::move(callbacks);
+@@ -278,6 +296,18 @@ TitleBar::TitleBar(QWasmWindow *window, emscripten::val parentElement)
      spacer.set("className", "spacer");
      m_element.call<void>("appendChild", spacer);
  
@@ -421,7 +463,7 @@ index fcc824b1..8304f88a 100644
      m_restore = std::make_unique<WebImageButton>();
      m_restore->setImage(Base64IconStore::get()->getIcon(Base64IconStore::IconType::Restore),
                          "svg+xml");
-@@ -285,6 +297,7 @@ TitleBar::TitleBar(QWasmWindow *window, emscripten::val parentElement)
+@@ -285,6 +315,7 @@ TitleBar::TitleBar(QWasmWindow *window, emscripten::val parentElement)
              WebImageButton::Callbacks([this]() { m_window->onNonClientAreaInteraction(); },
                                        [this]() { m_window->onRestoreClicked(); }));
  
@@ -429,7 +471,7 @@ index fcc824b1..8304f88a 100644
      m_element.call<void>("appendChild", m_restore->htmlElement());
  
      m_maximize = std::make_unique<WebImageButton>();
-@@ -294,6 +307,7 @@ TitleBar::TitleBar(QWasmWindow *window, emscripten::val parentElement)
+@@ -294,6 +325,7 @@ TitleBar::TitleBar(QWasmWindow *window, emscripten::val parentElement)
              WebImageButton::Callbacks([this]() { m_window->onNonClientAreaInteraction(); },
                                        [this]() { m_window->onMaximizeClicked(); }));
  
@@ -437,7 +479,7 @@ index fcc824b1..8304f88a 100644
      m_element.call<void>("appendChild", m_maximize->htmlElement());
  
      m_close = std::make_unique<WebImageButton>();
-@@ -302,6 +316,7 @@ TitleBar::TitleBar(QWasmWindow *window, emscripten::val parentElement)
+@@ -302,6 +334,7 @@ TitleBar::TitleBar(QWasmWindow *window, emscripten::val parentElement)
              WebImageButton::Callbacks([this]() { m_window->onNonClientAreaInteraction(); },
                                        [this]() { m_window->onCloseClicked(); }));
  
@@ -445,7 +487,7 @@ index fcc824b1..8304f88a 100644
      m_element.call<void>("appendChild", m_close->htmlElement());
  
      parentElement.call<void>("appendChild", m_element);
-@@ -351,6 +366,11 @@ void TitleBar::setRestoreVisible(bool visible)
+@@ -351,6 +384,11 @@ void TitleBar::setRestoreVisible(bool visible)
      m_restore->setVisible(visible);
  }
  
@@ -458,10 +500,19 @@ index fcc824b1..8304f88a 100644
  {
      m_maximize->setVisible(visible);
 diff --git a/src/plugins/platforms/wasm/qwasmwindownonclientarea.h b/src/plugins/platforms/wasm/qwasmwindownonclientarea.h
-index 78c77585..f8fcecd6 100644
+index 78c77585..f0313cb1 100644
 --- a/src/plugins/platforms/wasm/qwasmwindownonclientarea.h
 +++ b/src/plugins/platforms/wasm/qwasmwindownonclientarea.h
-@@ -189,6 +189,7 @@ public:
+@@ -87,6 +87,8 @@ private:
+     std::unique_ptr<qstdweb::EventCallback> m_webMouseMoveEventCallback;
+     std::unique_ptr<qstdweb::EventCallback> m_webMouseDownEventCallback;
+     std::unique_ptr<qstdweb::EventCallback> m_webClickEventCallback;
++    std::unique_ptr<qstdweb::EventCallback> m_webCancelEventCallback;
++    int m_pressedPointerId = -1;
+ 
+     Callbacks m_callbacks;
+ };
+@@ -189,6 +191,7 @@ public:
      void setTitle(const QString &title);
      void setRestoreVisible(bool visible);
      void setMaximizeVisible(bool visible);
@@ -469,7 +520,7 @@ index 78c77585..f8fcecd6 100644
      void setCloseVisible(bool visible);
      void setIcon(std::string_view imageData, std::string_view format);
      void setWidth(int width);
-@@ -210,6 +211,7 @@ private:
+@@ -210,6 +213,7 @@ private:
  
      std::unique_ptr<WebImageButton> m_close;
      std::unique_ptr<WebImageButton> m_maximize;

@@ -1,1 +1,387 @@
-{"info": {"abi_version": "2025_0", "arch": "wasm32", "platform": "emscripten_4_0_9", "python": "3.13.2", "version": "0.30.0-dev"}, "packages": {"bottleneck": {"depends": ["numpy"], "file_name": "bottleneck-1.6.0-cp313-cp313-pyodide_2025_0_wasm32.whl", "imports": ["bottleneck"], "install_dir": "site", "name": "Bottleneck", "package_type": "package", "sha256": "82af5c447dffe9b07ad9b41aa362a671c81cfb8933e7f968277cbab36dacea90", "unvendored_tests": false, "version": "1.6.0"}, "certifi": {"depends": [], "file_name": "certifi-2026.1.4-cp313-none-any.whl", "imports": ["certifi"], "install_dir": "site", "name": "certifi", "package_type": "package", "sha256": "1097338c302ea312116ce3288869e32abe545c992b229cf7b1d20f6e14e15e0f", "unvendored_tests": false, "version": "2026.1.4"}, "charset-normalizer": {"depends": [], "file_name": "charset_normalizer-3.4.4-cp313-none-any.whl", "imports": ["charset_normalizer"], "install_dir": "site", "name": "charset-normalizer", "package_type": "package", "sha256": "bf4a728b197f2d9591a914bb5343e61742e8ca993a887d6a941612c11cbb13d3", "unvendored_tests": false, "version": "3.4.4"}, "decorator": {"depends": [], "file_name": "decorator-5.2.1-cp313-none-any.whl", "imports": ["decorator"], "install_dir": "site", "name": "decorator", "package_type": "package", "sha256": "7bfae8caaa773a05fba41c25956adf171fed165d33d7ec01ac2db6b43f98e1b4", "unvendored_tests": false, "version": "5.2.1"}, "httpx": {"depends": [], "file_name": "httpx-0.28.1-cp313-none-any.whl", "imports": ["httpx"], "install_dir": "site", "name": "httpx", "package_type": "package", "sha256": "8403f6f4f0cf84fc2f6d52556c31cb876de89525c31729c0fa557e3101b1472d", "unvendored_tests": false, "version": "0.28.1"}, "idna": {"depends": [], "file_name": "idna-3.10-cp313-none-any.whl", "imports": ["idna"], "install_dir": "site", "name": "idna", "package_type": "package", "sha256": "38815bb3a88e43500abab835482a9d67c58ac5602ed4291f8017ce04e0d7dbca", "unvendored_tests": false, "version": "3.10"}, "joblib": {"depends": [], "file_name": "joblib-1.4.2-cp313-none-any.whl", "imports": ["joblib"], "install_dir": "site", "name": "joblib", "package_type": "package", "sha256": "c886a14a2d6d0229cd57ab16d1cbddec6b104359ca5e41380a998067e7456114", "unvendored_tests": true, "version": "1.4.2"}, "libopenblas": {"depends": [], "file_name": "libopenblas-0.3.26.zip", "imports": [], "install_dir": "dynlib", "name": "libopenblas", "package_type": "shared_library", "sha256": "f8f5db65c9367ed7f057d0ee853d94ddb3c007968aa8138253461dad42537fa2", "unvendored_tests": false, "version": "0.3.26"}, "libopenssl": {"depends": [], "file_name": "libopenssl-1.1.1w.zip", "imports": [], "install_dir": "dynlib", "name": "libopenssl", "package_type": "shared_library", "sha256": "eaec7126f466a33ea4121fd230211bb01e9ad1c5748f3cd0b4b1c8677b4ac90a", "unvendored_tests": false, "version": "1.1.1w"}, "lzma": {"depends": [], "file_name": "lzma-1.0.0-cp313-cp313-pyodide_2025_0_wasm32.whl", "imports": ["lzma", "_lzma"], "install_dir": "site", "name": "lzma", "package_type": "cpython_module", "sha256": "e95e33df6127eaaafbe2223e00fdcc3ba5b213ac7f6928e957acdd53fc814570", "unvendored_tests": false, "version": "1.0.0"}, "networkx": {"depends": ["decorator", "numpy"], "file_name": "networkx-3.4.2-cp313-none-any.whl", "imports": ["networkx"], "install_dir": "site", "name": "networkx", "package_type": "package", "sha256": "7b9ac681c93cbffba3ae42418bcf7b3487b36cb9ff5c4a3a65c420de9a841068", "unvendored_tests": true, "version": "3.4.2"}, "numpy": {"depends": [], "file_name": "numpy-2.2.5-cp313-cp313-pyodide_2025_0_wasm32.whl", "imports": ["numpy"], "install_dir": "site", "name": "numpy", "package_type": "package", "sha256": "110556e59d1b5fa6b9a4ebf8fe132db8b16b2c58968df213f8c4d5fd0aa25077", "unvendored_tests": false, "version": "2.2.5"}, "packaging": {"depends": [], "file_name": "packaging-24.2-cp313-none-any.whl", "imports": ["packaging"], "install_dir": "site", "name": "packaging", "package_type": "package", "sha256": "2cbb8ad51603cf4442cae1bdc20bdfcc3ebb62ed41b5399414e6b67c5b16d3fb", "unvendored_tests": false, "version": "24.2"}, "pandas": {"depends": ["numpy", "python-dateutil", "pytz"], "file_name": "pandas-2.3.3-cp313-cp313-pyodide_2025_0_wasm32.whl", "imports": ["pandas"], "install_dir": "site", "name": "pandas", "package_type": "package", "sha256": "7cea8d3ab86026435607fa1f9300a9cc3c87628f1567a4f1412b5c47e0a23403", "unvendored_tests": true, "version": "2.3.3"}, "pygments": {"depends": [], "file_name": "pygments-2.19.1-cp313-none-any.whl", "imports": ["pygments"], "install_dir": "site", "name": "Pygments", "package_type": "package", "sha256": "667cedb7a146980b336aab043adfea57e8ba2f0081800df7e549dead787958d7", "unvendored_tests": false, "version": "2.19.1"}, "python-dateutil": {"depends": ["six"], "file_name": "python_dateutil-2.9.0.post0-cp313-none-any.whl", "imports": ["dateutil"], "install_dir": "site", "name": "python-dateutil", "package_type": "package", "sha256": "930ffe667831da57db9bfef9c15efbfa35b4fdd86002710e85fd171d93d63b00", "unvendored_tests": false, "version": "2.9.0.post0"}, "pytz": {"depends": [], "file_name": "pytz-2025.2-cp313-none-any.whl", "imports": ["pytz"], "install_dir": "site", "name": "pytz", "package_type": "package", "sha256": "8883727bf3aeca6dbb1eaba9920fa8d24aee81c11fe4b66c6a79a0a6167fe6ac", "unvendored_tests": false, "version": "2025.2"}, "pyyaml": {"depends": [], "file_name": "pyyaml-6.0.2-cp313-cp313-pyodide_2025_0_wasm32.whl", "imports": ["_yaml", "yaml"], "install_dir": "site", "name": "pyyaml", "package_type": "package", "sha256": "8c8d06b00fb773fe7f7bc84e7a69e87816bdb9c5c1f0e56a10724a75c019f437", "unvendored_tests": false, "version": "6.0.2"}, "requests": {"depends": ["charset-normalizer", "idna", "urllib3", "certifi"], "file_name": "requests-2.32.4-cp313-none-any.whl", "imports": ["requests"], "install_dir": "site", "name": "requests", "package_type": "package", "sha256": "a9214c194a950c694d48e670e092570cb42c11192fd70725fdba9c42d29cc92a", "unvendored_tests": false, "version": "2.32.4"}, "scikit-learn": {"depends": ["scipy", "joblib", "threadpoolctl"], "file_name": "scikit_learn-1.7.0-cp313-cp313-pyodide_2025_0_wasm32.whl", "imports": ["sklearn"], "install_dir": "site", "name": "scikit-learn", "package_type": "package", "sha256": "bf96d18e343971e5c80cc01d450eaeabcf2d44fab72923be0e71355965012152", "unvendored_tests": true, "version": "1.7.0"}, "scipy": {"depends": ["numpy", "libopenblas"], "file_name": "scipy-1.14.1-cp313-cp313-pyodide_2025_0_wasm32.whl", "imports": ["scipy"], "install_dir": "site", "name": "scipy", "package_type": "package", "sha256": "44ece447fad8e63049cb2248eb0c463ccee024918d4d0a8d4d743423d2352327", "unvendored_tests": true, "version": "1.14.1"}, "six": {"depends": [], "file_name": "six-1.17.0-cp313-none-any.whl", "imports": ["six"], "install_dir": "site", "name": "six", "package_type": "package", "sha256": "45a79c2fe4c6a8987bd89170686e76d4d58d2c4feda51de4127a3a792a8ba7b6", "unvendored_tests": false, "version": "1.17.0"}, "sqlite3": {"depends": [], "file_name": "sqlite3-1.0.0-cp313-cp313-pyodide_2025_0_wasm32.whl", "imports": ["sqlite3", "_sqlite3"], "install_dir": "site", "name": "sqlite3", "package_type": "cpython_module", "sha256": "8d67bab4d94b6594e2b470ab4ba7fb7a2ba2d26377871e49406e2a9a39a0da91", "unvendored_tests": false, "version": "1.0.0"}, "ssl": {"depends": ["libopenssl"], "file_name": "ssl-1.0.0-cp313-cp313-pyodide_2025_0_wasm32.whl", "imports": ["ssl", "_ssl"], "install_dir": "site", "name": "ssl", "package_type": "cpython_module", "sha256": "8ce3699ec1fe4b0be0930d93cb5cfc65649abeb27ef3de1c56ec7cc704c1914b", "unvendored_tests": false, "version": "1.0.0"}, "threadpoolctl": {"depends": [], "file_name": "threadpoolctl-3.5.0-cp313-none-any.whl", "imports": ["threadpoolctl"], "install_dir": "site", "name": "threadpoolctl", "package_type": "package", "sha256": "5c5d3b8f00400c01b97116b1e96ed9b134678bf45f7aae69fab76ea88321dc29", "unvendored_tests": false, "version": "3.5.0"}, "urllib3": {"depends": [], "file_name": "urllib3-2.5.0-cp313-none-any.whl", "imports": ["urllib3"], "install_dir": "site", "name": "urllib3", "package_type": "package", "sha256": "f8a6af8baf65b6c2e19bfaa047bb6b3807b7e9005513e5c1fc567f1b863bc5ae", "unvendored_tests": false, "version": "2.5.0"}, "xlrd": {"depends": [], "file_name": "xlrd-2.0.1-cp313-none-any.whl", "imports": ["xlrd"], "install_dir": "site", "name": "xlrd", "package_type": "package", "sha256": "b3935521dd366cbc4227c5ba3312e83f3b99e08466e6c340f78e97e342de1440", "unvendored_tests": false, "version": "2.0.1"}}}
+{
+ "info": {
+  "abi_version": "2025_0",
+  "arch": "wasm32",
+  "platform": "emscripten_4_0_9",
+  "python": "3.13.2",
+  "version": "0.30.0-dev"
+ },
+ "packages": {
+  "bottleneck": {
+   "depends": [
+    "numpy"
+   ],
+   "file_name": "bottleneck-1.6.0-cp313-cp313-pyodide_2025_0_wasm32.whl",
+   "imports": [
+    "bottleneck"
+   ],
+   "install_dir": "site",
+   "name": "Bottleneck",
+   "package_type": "package",
+   "sha256": "82af5c447dffe9b07ad9b41aa362a671c81cfb8933e7f968277cbab36dacea90",
+   "unvendored_tests": false,
+   "version": "1.6.0"
+  },
+  "certifi": {
+   "depends": [],
+   "file_name": "certifi-2026.1.4-cp313-none-any.whl",
+   "imports": [
+    "certifi"
+   ],
+   "install_dir": "site",
+   "name": "certifi",
+   "package_type": "package",
+   "sha256": "1097338c302ea312116ce3288869e32abe545c992b229cf7b1d20f6e14e15e0f",
+   "unvendored_tests": false,
+   "version": "2026.1.4"
+  },
+  "charset-normalizer": {
+   "depends": [],
+   "file_name": "charset_normalizer-3.4.4-cp313-none-any.whl",
+   "imports": [
+    "charset_normalizer"
+   ],
+   "install_dir": "site",
+   "name": "charset-normalizer",
+   "package_type": "package",
+   "sha256": "bf4a728b197f2d9591a914bb5343e61742e8ca993a887d6a941612c11cbb13d3",
+   "unvendored_tests": false,
+   "version": "3.4.4"
+  },
+  "decorator": {
+   "depends": [],
+   "file_name": "decorator-5.2.1-cp313-none-any.whl",
+   "imports": [
+    "decorator"
+   ],
+   "install_dir": "site",
+   "name": "decorator",
+   "package_type": "package",
+   "sha256": "7bfae8caaa773a05fba41c25956adf171fed165d33d7ec01ac2db6b43f98e1b4",
+   "unvendored_tests": false,
+   "version": "5.2.1"
+  },
+  "httpx": {
+   "depends": [],
+   "file_name": "httpx-0.28.1-cp313-none-any.whl",
+   "imports": [
+    "httpx"
+   ],
+   "install_dir": "site",
+   "name": "httpx",
+   "package_type": "package",
+   "sha256": "8403f6f4f0cf84fc2f6d52556c31cb876de89525c31729c0fa557e3101b1472d",
+   "unvendored_tests": false,
+   "version": "0.28.1"
+  },
+  "idna": {
+   "depends": [],
+   "file_name": "idna-3.10-cp313-none-any.whl",
+   "imports": [
+    "idna"
+   ],
+   "install_dir": "site",
+   "name": "idna",
+   "package_type": "package",
+   "sha256": "38815bb3a88e43500abab835482a9d67c58ac5602ed4291f8017ce04e0d7dbca",
+   "unvendored_tests": false,
+   "version": "3.10"
+  },
+  "joblib": {
+   "depends": [],
+   "file_name": "joblib-1.4.2-cp313-none-any.whl",
+   "imports": [
+    "joblib"
+   ],
+   "install_dir": "site",
+   "name": "joblib",
+   "package_type": "package",
+   "sha256": "c886a14a2d6d0229cd57ab16d1cbddec6b104359ca5e41380a998067e7456114",
+   "unvendored_tests": true,
+   "version": "1.4.2"
+  },
+  "libopenblas": {
+   "depends": [],
+   "file_name": "libopenblas-0.3.26.zip",
+   "imports": [],
+   "install_dir": "dynlib",
+   "name": "libopenblas",
+   "package_type": "shared_library",
+   "sha256": "f8f5db65c9367ed7f057d0ee853d94ddb3c007968aa8138253461dad42537fa2",
+   "unvendored_tests": false,
+   "version": "0.3.26"
+  },
+  "libopenssl": {
+   "depends": [],
+   "file_name": "libopenssl-1.1.1w.zip",
+   "imports": [],
+   "install_dir": "dynlib",
+   "name": "libopenssl",
+   "package_type": "shared_library",
+   "sha256": "eaec7126f466a33ea4121fd230211bb01e9ad1c5748f3cd0b4b1c8677b4ac90a",
+   "unvendored_tests": false,
+   "version": "1.1.1w"
+  },
+  "lzma": {
+   "depends": [],
+   "file_name": "lzma-1.0.0-cp313-cp313-pyodide_2025_0_wasm32.whl",
+   "imports": [
+    "lzma",
+    "_lzma"
+   ],
+   "install_dir": "site",
+   "name": "lzma",
+   "package_type": "cpython_module",
+   "sha256": "e95e33df6127eaaafbe2223e00fdcc3ba5b213ac7f6928e957acdd53fc814570",
+   "unvendored_tests": false,
+   "version": "1.0.0"
+  },
+  "networkx": {
+   "depends": [
+    "decorator",
+    "numpy"
+   ],
+   "file_name": "networkx-3.4.2-cp313-none-any.whl",
+   "imports": [
+    "networkx"
+   ],
+   "install_dir": "site",
+   "name": "networkx",
+   "package_type": "package",
+   "sha256": "7b9ac681c93cbffba3ae42418bcf7b3487b36cb9ff5c4a3a65c420de9a841068",
+   "unvendored_tests": true,
+   "version": "3.4.2"
+  },
+  "numpy": {
+   "depends": [],
+   "file_name": "numpy-2.2.5-cp313-cp313-pyodide_2025_0_wasm32.whl",
+   "imports": [
+    "numpy"
+   ],
+   "install_dir": "site",
+   "name": "numpy",
+   "package_type": "package",
+   "sha256": "110556e59d1b5fa6b9a4ebf8fe132db8b16b2c58968df213f8c4d5fd0aa25077",
+   "unvendored_tests": false,
+   "version": "2.2.5"
+  },
+  "packaging": {
+   "depends": [],
+   "file_name": "packaging-24.2-cp313-none-any.whl",
+   "imports": [
+    "packaging"
+   ],
+   "install_dir": "site",
+   "name": "packaging",
+   "package_type": "package",
+   "sha256": "2cbb8ad51603cf4442cae1bdc20bdfcc3ebb62ed41b5399414e6b67c5b16d3fb",
+   "unvendored_tests": false,
+   "version": "24.2"
+  },
+  "pandas": {
+   "depends": [
+    "numpy",
+    "python-dateutil",
+    "pytz"
+   ],
+   "file_name": "pandas-2.3.3-cp313-cp313-pyodide_2025_0_wasm32.whl",
+   "imports": [
+    "pandas"
+   ],
+   "install_dir": "site",
+   "name": "pandas",
+   "package_type": "package",
+   "sha256": "7cea8d3ab86026435607fa1f9300a9cc3c87628f1567a4f1412b5c47e0a23403",
+   "unvendored_tests": true,
+   "version": "2.3.3"
+  },
+  "pygments": {
+   "depends": [],
+   "file_name": "pygments-2.19.1-cp313-none-any.whl",
+   "imports": [
+    "pygments"
+   ],
+   "install_dir": "site",
+   "name": "Pygments",
+   "package_type": "package",
+   "sha256": "667cedb7a146980b336aab043adfea57e8ba2f0081800df7e549dead787958d7",
+   "unvendored_tests": false,
+   "version": "2.19.1"
+  },
+  "python-dateutil": {
+   "depends": [
+    "six"
+   ],
+   "file_name": "python_dateutil-2.9.0.post0-cp313-none-any.whl",
+   "imports": [
+    "dateutil"
+   ],
+   "install_dir": "site",
+   "name": "python-dateutil",
+   "package_type": "package",
+   "sha256": "930ffe667831da57db9bfef9c15efbfa35b4fdd86002710e85fd171d93d63b00",
+   "unvendored_tests": false,
+   "version": "2.9.0.post0"
+  },
+  "pytz": {
+   "depends": [],
+   "file_name": "pytz-2025.2-cp313-none-any.whl",
+   "imports": [
+    "pytz"
+   ],
+   "install_dir": "site",
+   "name": "pytz",
+   "package_type": "package",
+   "sha256": "8883727bf3aeca6dbb1eaba9920fa8d24aee81c11fe4b66c6a79a0a6167fe6ac",
+   "unvendored_tests": false,
+   "version": "2025.2"
+  },
+  "pyyaml": {
+   "depends": [],
+   "file_name": "pyyaml-6.0.2-cp313-cp313-pyodide_2025_0_wasm32.whl",
+   "imports": [
+    "_yaml",
+    "yaml"
+   ],
+   "install_dir": "site",
+   "name": "pyyaml",
+   "package_type": "package",
+   "sha256": "8c8d06b00fb773fe7f7bc84e7a69e87816bdb9c5c1f0e56a10724a75c019f437",
+   "unvendored_tests": false,
+   "version": "6.0.2"
+  },
+  "requests": {
+   "depends": [
+    "charset-normalizer",
+    "idna",
+    "urllib3",
+    "certifi"
+   ],
+   "file_name": "requests-2.32.4-cp313-none-any.whl",
+   "imports": [
+    "requests"
+   ],
+   "install_dir": "site",
+   "name": "requests",
+   "package_type": "package",
+   "sha256": "a9214c194a950c694d48e670e092570cb42c11192fd70725fdba9c42d29cc92a",
+   "unvendored_tests": false,
+   "version": "2.32.4"
+  },
+  "scikit-learn": {
+   "depends": [
+    "scipy",
+    "joblib",
+    "threadpoolctl"
+   ],
+   "file_name": "scikit_learn-1.7.0-cp313-cp313-pyodide_2025_0_wasm32.whl",
+   "imports": [
+    "sklearn"
+   ],
+   "install_dir": "site",
+   "name": "scikit-learn",
+   "package_type": "package",
+   "sha256": "bf96d18e343971e5c80cc01d450eaeabcf2d44fab72923be0e71355965012152",
+   "unvendored_tests": true,
+   "version": "1.7.0"
+  },
+  "scipy": {
+   "depends": [
+    "numpy",
+    "libopenblas"
+   ],
+   "file_name": "scipy-1.14.1-cp313-cp313-pyodide_2025_0_wasm32.whl",
+   "imports": [
+    "scipy"
+   ],
+   "install_dir": "site",
+   "name": "scipy",
+   "package_type": "package",
+   "sha256": "44ece447fad8e63049cb2248eb0c463ccee024918d4d0a8d4d743423d2352327",
+   "unvendored_tests": true,
+   "version": "1.14.1"
+  },
+  "six": {
+   "depends": [],
+   "file_name": "six-1.17.0-cp313-none-any.whl",
+   "imports": [
+    "six"
+   ],
+   "install_dir": "site",
+   "name": "six",
+   "package_type": "package",
+   "sha256": "45a79c2fe4c6a8987bd89170686e76d4d58d2c4feda51de4127a3a792a8ba7b6",
+   "unvendored_tests": false,
+   "version": "1.17.0"
+  },
+  "sqlite3": {
+   "depends": [],
+   "file_name": "sqlite3-1.0.0-cp313-cp313-pyodide_2025_0_wasm32.whl",
+   "imports": [
+    "sqlite3",
+    "_sqlite3"
+   ],
+   "install_dir": "site",
+   "name": "sqlite3",
+   "package_type": "cpython_module",
+   "sha256": "8d67bab4d94b6594e2b470ab4ba7fb7a2ba2d26377871e49406e2a9a39a0da91",
+   "unvendored_tests": false,
+   "version": "1.0.0"
+  },
+  "ssl": {
+   "depends": [
+    "libopenssl"
+   ],
+   "file_name": "ssl-1.0.0-cp313-cp313-pyodide_2025_0_wasm32.whl",
+   "imports": [
+    "ssl",
+    "_ssl"
+   ],
+   "install_dir": "site",
+   "name": "ssl",
+   "package_type": "cpython_module",
+   "sha256": "8ce3699ec1fe4b0be0930d93cb5cfc65649abeb27ef3de1c56ec7cc704c1914b",
+   "unvendored_tests": false,
+   "version": "1.0.0"
+  },
+  "threadpoolctl": {
+   "depends": [],
+   "file_name": "threadpoolctl-3.5.0-cp313-none-any.whl",
+   "imports": [
+    "threadpoolctl"
+   ],
+   "install_dir": "site",
+   "name": "threadpoolctl",
+   "package_type": "package",
+   "sha256": "5c5d3b8f00400c01b97116b1e96ed9b134678bf45f7aae69fab76ea88321dc29",
+   "unvendored_tests": false,
+   "version": "3.5.0"
+  },
+  "urllib3": {
+   "depends": [],
+   "file_name": "urllib3-2.5.0-cp313-none-any.whl",
+   "imports": [
+    "urllib3"
+   ],
+   "install_dir": "site",
+   "name": "urllib3",
+   "package_type": "package",
+   "sha256": "f8a6af8baf65b6c2e19bfaa047bb6b3807b7e9005513e5c1fc567f1b863bc5ae",
+   "unvendored_tests": false,
+   "version": "2.5.0"
+  },
+  "xlrd": {
+   "depends": [],
+   "file_name": "xlrd-2.0.1-cp313-none-any.whl",
+   "imports": [
+    "xlrd"
+   ],
+   "install_dir": "site",
+   "name": "xlrd",
+   "package_type": "package",
+   "sha256": "b3935521dd366cbc4227c5ba3312e83f3b99e08466e6c340f78e97e342de1440",
+   "unvendored_tests": false,
+   "version": "2.0.1"
+  }
+ }
+}

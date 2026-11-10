@@ -31,6 +31,19 @@
 <div id="qt"></div>
 <div id="loading"><div style="font-size:20px;font-weight:600">Orange</div><div id="bar"><div></div></div><div id="status">Loading</div><div style="color:#999;font-size:12px">The first visit may take a minute or two. Later visits are faster.</div><div id="err"></div></div>
 <script>
+(() => {
+  const BUILD = "83f0579c4c44";
+  fetch(location.pathname + "?latest=" + Date.now(), { cache: "no-store" })
+    .then(r => r.ok ? r.text() : "").then(t => {
+      const m = t.match(/const BUILD = "([0-9a-f]+)"/);
+      if (!m || m[1] === BUILD) return;
+      try { if (sessionStorage.getItem("orange-reloaded-for") === m[1]) return;
+            sessionStorage.setItem("orange-reloaded-for", m[1]); } catch (e) {}
+      fetch(location.href, { cache: "reload" }).catch(() => {}).finally(() => location.reload());
+    }).catch(() => {});
+})();
+</script>
+<script>
 // iPad Safari ignores user-scalable=no: stop double-tap and pinch zoom ourselves.
 // (Qt reads pointer events, so cancelling the touch events' default does not
 // change what Qt sees.)
@@ -110,7 +123,7 @@ import { loadPyodide } from "./pyodide.mjs";
 //  - big files are stored gzip-compressed and decompressed here
 //  - every file is kept in Cache Storage for this build, so later visits
 //    load from the device instead of the network
-const BUILD = "30cf7e3843b0";
+const BUILD = "83f0579c4c44";
 const CACHE_NAME = "orange-web-" + BUILD;
 const GZ = ["pyodide.asm.wasm", "orange-sp.tar", "NanumGothic.ttf", "winfonts.tar"];
 const _fetch = window.fetch.bind(window);

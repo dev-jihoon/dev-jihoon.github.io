@@ -37,11 +37,32 @@ PY
 
 # 2. .py -> .pyc in wheels and the standard library (updates the lock file)
 cd $D && $W/hostpy/bin/pyodide py-compile --silent .
+# py-compile writes new timestamps every time; the packages never change, so
+# reuse the already published compiled files (keeps git commits small)
+PREV=/home/claude/dev-jihoon.github.io/orange
+python3 - "$PREV" <<'PY'
+import json, os, shutil, sys
+prev = sys.argv[1]; D = '/home/claude/wasm/deploy/orange'
+if os.path.exists(prev + '/pyodide-lock.json'):
+    pl = json.load(open(prev + '/pyodide-lock.json'))['packages']
+    lock = json.load(open(D + '/pyodide-lock.json'))
+    n = 0
+    for k, e in lock['packages'].items():
+        q = pl.get(k)
+        if q and q['file_name'] == e['file_name'] and q['version'] == e['version'] \
+                and os.path.exists(prev + '/' + q['file_name']):
+            shutil.copy(prev + '/' + q['file_name'], D + '/' + e['file_name'])
+            e['sha256'] = q['sha256']; n += 1
+    json.dump(lock, open(D + '/pyodide-lock.json', 'w'), indent=1, sort_keys=True)
+    if os.path.exists(prev + '/python_stdlib.zip'):
+        shutil.copy(prev + '/python_stdlib.zip', D + '/python_stdlib.zip')
+    print('reused', n, 'published packages')
+PY
 
 # 3. Orange and its pure-Python dependencies, precompiled
 rm -rf /tmp/orange-sp-pyc && mkdir -p /tmp/orange-sp-pyc
 tar xf $S/orange-sp.tar -C /tmp/orange-sp-pyc
-$PYHOST -m compileall -b -q -j 2 /tmp/orange-sp-pyc
+$PYHOST -m compileall -b -q -j 2 --invalidation-mode unchecked-hash /tmp/orange-sp-pyc
 find /tmp/orange-sp-pyc -name "*.py" -delete
 find /tmp/orange-sp-pyc -name __pycache__ -prune -exec rm -rf {} \;
 (cd /tmp/orange-sp-pyc && tar cf $D/orange-sp.tar --sort=name --mtime='2026-01-01' --owner=0 --group=0 .)
@@ -50,7 +71,7 @@ find /tmp/orange-sp-pyc -name __pycache__ -prune -exec rm -rf {} \;
 cp $W/widget-registry.pck $D/widget-registry.pck
 
 # 5. index.html: gzip + Cache Storage fetch layer, no cache-busting queries
-BUILD_ID=$(cd $D && cat pyodide.asm.wasm orange-sp.tar boot.py webpatches.py pyodide-lock.json widget-registry.pck | sha256sum | cut -c1-12)
+BUILD_ID=$(cd $D && cat pyodide.asm.wasm orange-sp.tar boot.py webpatches.py pyodide-lock.json widget-registry.pck NanumGothic.ttf winfonts.tar | sha256sum | cut -c1-12)
 python3 - "$BUILD_ID" <<'PY'
 import sys
 build = sys.argv[1]
@@ -95,6 +116,23 @@ window.fetch = async (input, init) => {
 };''' % build
 html = html.replace('import { loadPyodide } from "./pyodide.mjs";',
                     'import { loadPyodide } from "./pyodide.mjs";\n' + layer, 1)
+# A page kept by the browser (or by GitHub Pages' 10-minute cache) may be an
+# older build: compare with the published one and reload once if it changed.
+fresh = '''<script>
+(() => {
+  const BUILD = "%s";
+  fetch(location.pathname + "?latest=" + Date.now(), { cache: "no-store" })
+    .then(r => r.ok ? r.text() : "").then(t => {
+      const m = t.match(/const BUILD = "([0-9a-f]+)"/);
+      if (!m || m[1] === BUILD) return;
+      try { if (sessionStorage.getItem("orange-reloaded-for") === m[1]) return;
+            sessionStorage.setItem("orange-reloaded-for", m[1]); } catch (e) {}
+      fetch(location.href, { cache: "reload" }).catch(() => {}).finally(() => location.reload());
+    }).catch(() => {});
+})();
+</script>
+''' % build
+html = html.replace('<script>', fresh + '<script>', 1)
 html = html.replace('"./boot.py?" + Date.now()', '"./boot.py"').replace('"./webpatches.py?" + Date.now()', '"./webpatches.py"')
 html = html.replace(', viewport-fit=cover', '')
 open(D+'/index.html', 'w').write(html)
