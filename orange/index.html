@@ -16,6 +16,15 @@
   #bar { width: 260px; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
   #bar > div { height: 100%; width: 0; background: #f7941d; transition: width .3s; }
   #err { color: #b00; white-space: pre-wrap; font: 12px monospace; max-width: 90vw; max-height: 40vh; overflow: auto; }
+  #webdlg { position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,.25); display: flex; align-items: center; justify-content: center; }
+  #webdlg .box { background: #f2f2f2; color: #222; border: 1px solid #aaa; border-radius: 6px; box-shadow: 0 6px 24px rgba(0,0,0,.3);
+                 padding: 16px 18px; min-width: 280px; font: 15px -apple-system, "DejaVu Sans", sans-serif; }
+  #webdlg .title { font-weight: 600; margin-bottom: 14px; word-break: break-all; }
+  #webdlg .row { display: flex; gap: 10px; justify-content: flex-end; }
+  #webdlg .btn, #webdlg button { position: relative; overflow: hidden; display: inline-block; padding: 8px 16px; border: 1px solid #999; border-radius: 4px;
+                 background: #fff; color: #222; font: inherit; text-decoration: none; cursor: pointer; }
+  #webdlg .primary { background: #2a82da; border-color: #1f6fbf; color: #fff; }
+  #webdlg input[type=file] { position: absolute; inset: 0; opacity: 0; font-size: 100px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -29,7 +38,7 @@
   let lastEnd = 0;
   document.addEventListener("touchend", (e) => {
     const now = Date.now();
-    if (now - lastEnd < 400) e.preventDefault();
+    if (now - lastEnd < 400 && !(e.target.closest && e.target.closest("#webdlg"))) e.preventDefault();
     lastEnd = now;
   }, { passive: false, capture: true });
   document.addEventListener("touchmove", (e) => { if (e.touches.length > 1) e.preventDefault(); },
@@ -59,7 +68,7 @@ import { loadPyodide } from "./pyodide.mjs";
 //  - big files are stored gzip-compressed and decompressed here
 //  - every file is kept in Cache Storage for this build, so later visits
 //    load from the device instead of the network
-const BUILD = "f45553375050";
+const BUILD = "5ce0407dc09b";
 const CACHE_NAME = "orange-web-" + BUILD;
 const GZ = ["pyodide.asm.wasm", "orange-sp.tar", "NanumGothic.ttf"];
 const _fetch = window.fetch.bind(window);
@@ -98,18 +107,63 @@ const STARTUP_PACKAGES = ["numpy", "scipy", "scikit-learn", "pandas", "bottlenec
   "python-dateutil", "pytz", "sqlite3", "ssl", "lzma"];
 // Packages only a few widgets use; loaded in the background once Orange is up
 const LATER_PACKAGES = ["networkx"];
+// ?touchdebug: blue dot = where the finger touched, red/green = where Qt got
+// the press/release. They should overlap.
+if (new URLSearchParams(location.search).has("touchdebug")) {
+  window.orangeTouchDebug = true;
+  const dot = (x, y, color, size) => {
+    const d = document.createElement("div");
+    d.style.cssText = `position:fixed;left:${x - size / 2}px;top:${y - size / 2}px;width:${size}px;height:${size}px;border-radius:50%;border:2px solid ${color};z-index:30;pointer-events:none`;
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 2500);
+  };
+  document.addEventListener("pointerdown", (e) => dot(e.clientX, e.clientY, "#06f", 28), true);
+  window.orangeQtPoint = (x, y, press) => dot(x, y, press ? "#e00" : "#0a0", press ? 16 : 10);
+}
 // Browser file helpers used from Python (webpatches.py)
+// Browsers only open the file picker or start a download from inside a user's
+// tap or click. Qt handles the tap a moment later, which iPad browsers do not
+// accept, so on touch devices (or when the tap no longer counts) we show a
+// small box with a real file button / download link to tap.
+const isTouch = navigator.maxTouchPoints > 0;
+const needsOwnTap = () => isTouch || !(navigator.userActivation && navigator.userActivation.isActive);
+const webDialog = (title, buildAction) => {
+  document.getElementById("webdlg")?.remove();
+  const bg = document.createElement("div");
+  bg.id = "webdlg";
+  bg.innerHTML = `<div class="box"><div class="title"></div><div class="row"><span class="act"></span><button class="cancel">Cancel</button></div></div>`;
+  bg.querySelector(".title").textContent = title;
+  const close = () => bg.remove();
+  bg.querySelector(".cancel").onclick = close;
+  bg.addEventListener("pointerdown", (e) => { if (e.target === bg) close(); });
+  buildAction(bg.querySelector(".act"), close);
+  document.body.appendChild(bg);
+};
+const readPicked = async (input, cb) => {
+  const f = input.files[0];
+  if (!f) return;
+  const buf = new Uint8Array(await f.arrayBuffer());
+  cb(f.name, buf);
+};
 const picker = document.createElement("input");
 picker.type = "file"; picker.style.display = "none"; document.body.appendChild(picker);
 window.orangeWebPickFile = (accept, cb) => {
+  if (needsOwnTap()) {
+    webDialog("Open file", (slot, close) => {
+      const label = document.createElement("label");
+      label.className = "btn primary";
+      label.textContent = "Choose File\u2026";
+      const input = document.createElement("input");
+      input.type = "file"; input.accept = accept || "";
+      input.onchange = () => { close(); readPicked(input, cb); };
+      label.appendChild(input);
+      slot.appendChild(label);
+    });
+    return;
+  }
   picker.accept = accept || "";
   picker.value = "";
-  picker.onchange = async () => {
-    const f = picker.files[0];
-    if (!f) return;
-    const buf = new Uint8Array(await f.arrayBuffer());
-    cb(f.name, buf);
-  };
+  picker.onchange = () => readPicked(picker, cb);
   picker.click();
 };
 window.orangeModified = false;
@@ -118,10 +172,21 @@ window.addEventListener("beforeunload", (e) => {
 });
 window.orangeWebDownload = (name, data) => {
   const blob = new Blob([data], { type: "application/octet-stream" });
+  const url = URL.createObjectURL(blob);
+  const later = () => setTimeout(() => URL.revokeObjectURL(url), 60000);
+  if (needsOwnTap()) {
+    webDialog("Save " + name, (slot, close) => {
+      const a = document.createElement("a");
+      a.className = "btn primary"; a.href = url; a.download = name; a.textContent = "Download";
+      a.onclick = () => { setTimeout(close, 0); later(); };
+      slot.appendChild(a);
+    });
+    return;
+  }
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = name;
+  a.href = url; a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  later();
 };
 const st = (msg, pct) => { document.getElementById("status").textContent = msg; if (pct != null) document.querySelector("#bar>div").style.width = pct + "%"; console.log("[boot]", (performance.now()/1000).toFixed(1) + "s", msg); };
 try {

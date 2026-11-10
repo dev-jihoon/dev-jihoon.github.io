@@ -56,7 +56,7 @@ async def session(port, page="orange.html", test="test_touch3.py"):
                 return !!(a && a.classList && a.classList.contains('qt-window-input-element') && a.inputMode !== 'none');
             }""")
         s.touch, s.tap, s.dtap, s.drag, s.hold, s.py, s.keyboard_up = touch, tap, dtap, drag, hold, py, keyboard_up
-        await pg.goto(f"http://localhost:{port}/{page}?test={test}")
+        await pg.goto(f"http://localhost:{port}/{page}" + ("&" if "?" in page else "?") + f"test={test}")
         for _ in range(160):
             await pg.wait_for_timeout(500)
             if any("[test] setup ok" in l for l in s.logs): break

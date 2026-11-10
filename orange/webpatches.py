@@ -658,7 +658,7 @@ class _TouchTweaks(QObject):
         self._hold_timer.timeout.connect(self._long_press)
         self._hold_pos = None
         self._popup_shown_at = None   # QElapsedTimer of the last combo pop-up
-        self._swallow_release = False
+        self._swallow_release = None
 
     POPUP_GRACE_MS = 400
 
@@ -670,15 +670,21 @@ class _TouchTweaks(QObject):
             self._popup_shown_at = QElapsedTimer()
             self._popup_shown_at.start()
             return False
-        if t == QEvent.MouseButtonRelease and self._swallow_release:
-            self._swallow_release = False
+        if t == QEvent.MouseButtonRelease and self._swallow_release is not None \
+                and obj is self._swallow_release:
+            # only at the widget that lost its press; never at the window
+            # level, where Qt clears its mouse grab
+            self._swallow_release = None
             return True
+        if t == QEvent.MouseButtonPress and isinstance(obj, QWidget) \
+                and obj is not self._swallow_release:
+            self._swallow_release = None
         if t in (QEvent.MouseButtonPress, QEvent.MouseButtonDblClick) \
                 and self._popup_shown_at is not None and self._is_touch(ev) \
                 and isinstance(obj, QWidget) \
                 and obj.window().metaObject().className() == "QComboBoxPrivateContainer" \
                 and self._popup_shown_at.elapsed() < self.POPUP_GRACE_MS:
-            self._swallow_release = True
+            self._swallow_release = obj
             return True
         return False
 
@@ -877,3 +883,33 @@ def apply_all(mainwindow_cls):
         patch_canvas_files(mainwindow_cls)
     except Exception:
         traceback.print_exc()
+
+
+class _TouchDebug(QObject):
+    """?touchdebug: draw where Qt receives presses (red) and releases (green);
+    the page draws where the finger touched (blue)."""
+    def eventFilter(self, obj, ev):
+        from AnyQt.QtGui import QWindow
+        t = ev.type()
+        if t in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease) and isinstance(obj, QWindow):
+            p = ev.globalPosition()
+            try:
+                _js().orangeQtPoint(p.x(), p.y(), t == QEvent.MouseButtonPress)
+            except Exception:
+                pass
+        return False
+
+
+_touch_debug = None
+
+
+def apply_touch_debug():
+    global _touch_debug
+    try:
+        if not bool(_js().orangeTouchDebug):
+            return False
+    except Exception:
+        return False
+    _touch_debug = _TouchDebug()
+    QApplication.instance().installEventFilter(_touch_debug)
+    return True

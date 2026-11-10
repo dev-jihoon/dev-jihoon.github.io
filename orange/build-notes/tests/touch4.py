@@ -81,6 +81,35 @@ p = bs[0].mapToGlobal(bs[0].rect().center()); json.dumps([p.x(), p.y()])""")
         nc = await py("json.dumps(len(T.scheme.nodes))")
         check("drag from toolbox onto canvas adds a widget", nc == na + 1, (na, nc))
         await s.pg.screenshot(path="/home/claude/wasm/t4_4.png")
+        # File widget "..." -> Open file box -> Choose File -> file is loaded
+        await dtap(*s.node["f"])
+        ok = await py("""from AnyQt.QtWidgets import QPushButton
+bs = [b for w in QApplication.topLevelWidgets() for b in w.findChildren(QPushButton) if b.isVisible() and b.text().replace('&', '') == 'Ok, got it']
+p = bs[0].mapToGlobal(bs[0].rect().center()) if bs else None
+json.dumps([p.x(), p.y()] if p else None)""")
+        if ok:
+            await tap(*ok)
+            await s.pg.wait_for_timeout(800)
+        bb = await py(f"""w = {W.format('f')}
+from AnyQt.QtWidgets import QPushButton
+b = [b for b in w.findChildren(QPushButton) if b.text() == '...'][0]
+p = b.mapToGlobal(b.rect().center()); json.dumps([p.x(), p.y()])""")
+        await tap(*bb)
+        await s.pg.wait_for_timeout(500)
+        box = await s.pg.evaluate("() => { const l = document.querySelector('#webdlg label'); if (!l) return null; const r = l.getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; }")
+        check("tapping ... shows the Open file box", box is not None, box)
+        await s.pg.screenshot(path="/home/claude/wasm/t4_5.png")
+        if box:
+            try:
+                async with s.pg.expect_file_chooser(timeout=5000) as fc:
+                    await tap(*box)
+                ch = await fc.value
+                await ch.set_files("/tmp/small.csv")
+                await s.pg.wait_for_timeout(2500)
+            except Exception as e:
+                print("chooser:", e)
+        n = await py(f"w = {W.format('f')}\njson.dumps([len(w.data) if w.data is not None else None, w.data.domain.class_var.name if w.data is not None and w.data.domain.class_var else None])")
+        check("the chosen file is loaded", n[0] == 3, n)
         print("\nSUMMARY %d/%d" % (sum(res), len(res)))
         errs = [l for l in s.logs if "Traceback" in l]
         if errs:

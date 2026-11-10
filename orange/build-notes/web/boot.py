@@ -315,6 +315,7 @@ try:
     mainwindow.setWindowFlag(_Qt.WindowType.WindowStaysOnBottomHint, True)
     mainwindow.showMaximized()
     webpatches.install_unload_guard(mainwindow)
+    webpatches.apply_touch_debug()
     if webpatches.apply_touch_tweaks(mainwindow):
         log("touch device: touch tweaks on")
     globals()["_orange_main"] = (main, mainwindow)

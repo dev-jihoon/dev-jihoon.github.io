@@ -19,6 +19,7 @@ PyQt6를 Pyodide에 정적으로 넣는 방법은 github.com/JarrettSJohnson/pyo
   - 숨겨 둔 위젯 창이 다른 창 변화 때문에 저절로 다시 나타나지 않게, 창을 보일 때 활성화
   - 더블클릭 판정에 두 번째 누름이 첫 누름 근처인지도 확인 (터치에서는 서로 다른 곳을 빨리 두 번 탭해도 더블클릭이 되던 문제)
   - 브라우저가 손가락 뗌을 다른 요소로 보내서 남은 터치 점을 모든 창에서 정리 (남은 점 위치로 탭이 잘못 가는 것 방지)
+  - 누른 위치를 offsetX/offsetY 대신 clientX/clientY와 요소 위치로 계산 (WebKit은 그림자 DOM·포인터 캡처에서 offsetX 기준이 달라짐)
 - patches/pyqt6-qaction-setmenu.txt: QAction.setMenu 함수 타입 불일치 수정
 - patches/anyqt-fixes.patch: ctypes로 Qt 공유 라이브러리를 못 찾을 때 대체 구현
 - web/boot.py: 스레드 대체(QThread/QThreadPool/ThreadPoolExecutor를 동기 실행), 없는 Qt 모듈 스텁, 한글 폰트, exec() 없이 캔버스 시작
@@ -42,5 +43,7 @@ PyQt6를 Pyodide에 정적으로 넣는 방법은 github.com/JarrettSJohnson/pyo
 - 글자 입력칸은 직접 탭할 때만 포커스 (창이 열릴 때 키보드가 뜨지 않게)
 - 스핀박스 화살표를 탭하면 값만 바뀌고 키보드는 안 뜸, 숫자 부분을 탭하면 입력
 - 메인 창을 맨 아래로 고정해서 캔버스를 탭해도 위젯 창이 뒤로 숨지 않음 (모든 기기)
+- 터치 기기에서는 파일 열기/저장을 작은 상자의 진짜 버튼으로 (브라우저가 탭 안에서만 파일 창·다운로드를 허락)
+- 주소 뒤에 ?touchdebug 를 붙이면 손가락 위치(파랑)와 Qt가 받은 위치(빨강/초록)를 점으로 표시
 - 사파리 두 번 탭/핀치 확대 막기, 키보드 때문에 밀린 페이지 스크롤 되돌리기 (web/orange.html)
 - 확인용 스크립트: tests/touch3.py, tests/touch4.py (크롬 터치 에뮬레이션, 35개 항목)

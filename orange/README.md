@@ -22,7 +22,8 @@
 - 위젯·연결 지우기: 위젯이나 연결선을 **길게 누르면** 메뉴가 뜹니다 → Remove. 또는 위젯을 탭해서 고른 뒤 Edit 메뉴 → Remove.
 - File 위젯에서 Type/Role 바꾸기: 칸을 탭하면 목록이 뜨고, 원하는 항목을 탭한 뒤 Apply.
 - 목록·표는 손가락으로 끌어서 스크롤합니다.
-- 내 데이터 열기: File 위젯 → `...` 버튼 → 아이패드 파일 앱에서 고르기 (csv, xlsx, tab 등)
+- 탭한 곳과 다른 데가 눌리는 것 같으면 주소 끝에 `?touchdebug`를 붙여 열어 보세요. 파란 원(손가락)과 빨간 점(오렌지가 받은 위치)이 어긋나는지 보입니다.
+- 내 데이터 열기: File 위젯 → `...` 버튼 → Choose File → 아이패드 파일 앱에서 고르기 (csv, xlsx, tab 등)
 - 예제 데이터: File 위젯 → "Browse documentation datasets" (iris, titanic, heart_disease, housing, zoo 등)
 - 작업 저장: File 메뉴 → Save → `.ows` 파일이 다운로드됩니다. 데스크톱 오렌지에서도 그대로 열립니다. 다시 열 때는 File → Open.
 - 저장하지 않은 작업이 있을 때 New/Open을 누르거나 탭을 닫으려 하면 저장할지 물어봅니다.
