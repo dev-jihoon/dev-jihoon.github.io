@@ -293,7 +293,10 @@ try:
     # A widget registry built ahead of time (same Orange version) lets us
     # skip widget discovery, which would import every widget module.
     _prebuilt_registry = os.path.exists("/widget-registry.pck")
-    main.parse_arguments(["orange-canvas", "--no-splash", "--no-welcome"]
+    # The welcome screen shows at start as in Orange (not for automated tests)
+    import js as _js_mod
+    _no_welcome = ["--no-welcome"] if "test=" in str(_js_mod.location.search) else []
+    main.parse_arguments(["orange-canvas", "--no-splash"] + _no_welcome
                          + (["--no-discovery"] if _prebuilt_registry else []))
     main.activate_default_config()
     if _prebuilt_registry:
@@ -327,6 +330,13 @@ try:
     mainwindow.setWindowFlag(_Qt.WindowType.WindowStaysOnBottomHint, True)
     mainwindow.showMaximized()
     webpatches.install_unload_guard(mainwindow)
+    try:
+        if str(_js_mod.localStorage.getItem("orange-show-welcome")) == "0":
+            from AnyQt.QtCore import QSettings as _QS
+            _QS().setValue("startup/show-welcome-screen", False)
+    except Exception:
+        pass
+    main.show_welcome_screen(mainwindow)
     webpatches.apply_touch_debug()
     if webpatches.apply_touch_tweaks(mainwindow):
         log("touch device: touch tweaks on")

@@ -64,5 +64,6 @@ PyQt6를 Pyodide에 정적으로 넣는 방법은 github.com/JarrettSJohnson/pyo
 - 열기 대화상자·질문 상자: 브라우저 파일 창/상자를 띄우고, 답하면 그 슬롯을 다시 실행해서 그때 답을 돌려줌
 - 알림만 하는 상자는 막지 않고 띄움, 그 밖의 exec() 대화상자도 보이게 유지
 - CSV File Import, Open Recent, Example Workflows는 따로 비동기로
+- 시작할 때 Orange의 Welcome 화면(New/Open/Recent/Examples...)을 띄움. "Show at startup" 선택은 브라우저 localStorage에 기억 (?test= 일 때는 안 띄움)
 - 오류가 나면 Orange의 "Error Encountered" 상자 (인터넷 없을 때의 윈도우판과 같음), 네트워크 소켓은 바로 실패
 - 확인용: tests/dlgtest.py

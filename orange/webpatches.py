@@ -1253,7 +1253,7 @@ def patch_canvas_dialogs():
     from orangecanvas.utils.settings import QSettings_readArray
     from orangecanvas import config
 
-    def _show_preview(self, title, items, on_choose):
+    def _show_preview(self, title, items, on_choose, on_accepted=None):
         dialog = previewdialog.PreviewDialog(self)
         model = previewmodel.PreviewModel(dialog, items=items)
         dialog.setWindowTitle(title)
@@ -1267,10 +1267,12 @@ def patch_canvas_dialogs():
             dialog.deleteLater()
             if status == QDialog.DialogCode.Accepted and index >= 0:
                 on_choose(model.item(index).path())
+                if on_accepted is not None:
+                    on_accepted()
         dialog_async(dialog, done)
         return QDialog.DialogCode.Rejected
 
-    def recent_scheme(self):
+    def recent_scheme(self, on_accepted=None):
         settings = QSettings()
         recent_items = QSettings_readArray(
             settings, "mainwindow/recent-items", {"title": (str, ""), "path": (str, "")})
@@ -1278,16 +1280,106 @@ def patch_canvas_dialogs():
         recent = [item for item in recent if os.path.exists(item.path)]
         items = [previewmodel.PreviewItem(name=item.title, path=item.path) for item in recent]
         return _show_preview(self, self.tr(cm._tr.m[200, "Recent Workflows"]), items,
-                             self.open_scheme_file)
+                             self.open_scheme_file, on_accepted)
 
-    def examples_dialog(self):
+    def examples_dialog(self, on_accepted=None):
         tutors = cm.examples.workflows(config.default)
         items = [previewmodel.PreviewItem(path=t.abspath()) for t in tutors]
         return _show_preview(self, self.tr(cm._tr.m[201, "Example Workflows"]), items,
-                             self.open_example_scheme)
+                             self.open_example_scheme, on_accepted)
 
     cm.CanvasMainWindow.recent_scheme = recent_scheme
     cm.CanvasMainWindow.examples_dialog = examples_dialog
+
+    def welcome_dialog(self):
+        """Orange's welcome screen (New / Open / Recent / Examples ...),
+        shown without blocking."""
+        from AnyQt.QtWidgets import QAction
+        from AnyQt.QtGui import QKeySequence
+        from orangecanvas.application import welcomedialog
+        from orangecanvas.resources import load_styled_svg_icon
+        _tr = cm._tr
+        name = QApplication.applicationName()
+        title = (self.tr(_tr.m[202, "Welcome to {}"]).format(name) if name
+                 else self.tr(_tr.m[203, "Welcome"]))
+        dialog = welcomedialog.WelcomeDialog(self, windowTitle=title)
+        feedback = config.default.APPLICATION_URLS.get("Feedback", "")
+        if feedback:
+            dialog.setFeedbackUrl(feedback)
+        donate = config.default.APPLICATION_URLS.get(_tr.m[204, "Donate"], "")
+        if donate:
+            dialog.setDonateUrl(donate)
+
+        def new_scheme():
+            if not self.is_transient():
+                self.new_workflow_window()
+            dialog.accept()
+
+        def open_scheme():
+            def picked(path):
+                self.open_scheme_file(path)
+                dialog.accept()
+            browser_open_file(".ows", picked)
+
+        def open_recent():
+            self.recent_scheme(on_accepted=dialog.accept)
+
+        def browse_examples():
+            self.examples_dialog(on_accepted=dialog.accept)
+
+        new_action = QAction(
+            self.tr(_tr.m[205, "New"]), dialog,
+            toolTip=self.tr(_tr.m[206, "Open a new workflow."]),
+            triggered=new_scheme, shortcut=QKeySequence.StandardKey.New,
+            icon=load_styled_svg_icon("New.svg"))
+        open_action = QAction(
+            self.tr(_tr.m[207, "Open"]), dialog,
+            objectName="welcome-action-open",
+            toolTip=self.tr(_tr.m[208, "Open a workflow."]),
+            triggered=open_scheme, shortcut=QKeySequence.StandardKey.Open,
+            icon=load_styled_svg_icon("Open.svg"))
+        recent_action = QAction(
+            self.tr(_tr.m[209, "Recent"]), dialog,
+            objectName="welcome-recent-action",
+            toolTip=self.tr(_tr.m[210, "Browse and open a recent workflow."]),
+            triggered=open_recent, shortcut=QKeySequence("Ctrl+Shift+R"),
+            icon=load_styled_svg_icon("Recent.svg"))
+        examples_action = QAction(
+            self.tr(_tr.m[211, "Examples"]), dialog,
+            objectName="welcome-examples-action",
+            toolTip=self.tr(_tr.m[212, "Browse example workflows."]),
+            triggered=browse_examples,
+            icon=load_styled_svg_icon("Examples.svg"))
+
+        bottom_row = [self.get_started_action, examples_action,
+                      self.documentation_action]
+        if self.get_started_screencasts_action.isEnabled():
+            bottom_row.insert(0, self.get_started_screencasts_action)
+
+        self.new_action.triggered.connect(dialog.accept)
+        top_row = [new_action, open_action, recent_action]
+        dialog.addRow(top_row, background="light-grass")
+        dialog.addRow(bottom_row, background="light-orange")
+
+        settings = QSettings()
+        dialog.setShowAtStartup(
+            settings.value("startup/show-welcome-screen", True, type=bool))
+
+        def done(_status):
+            settings.setValue("startup/show-welcome-screen", dialog.showAtStartup())
+            try:   # QSettings live in memory here; keep this choice in the browser
+                _js().localStorage.setItem("orange-show-welcome",
+                                           "1" if dialog.showAtStartup() else "0")
+            except Exception:
+                pass
+            try:
+                self.new_action.triggered.disconnect(dialog.accept)
+            except Exception:
+                pass
+            dialog.deleteLater()
+        dialog_async(dialog, done)
+        return QDialog.DialogCode.Rejected
+    cm.CanvasMainWindow.welcome_dialog = welcome_dialog
 
 
 def patch_csv_import():
