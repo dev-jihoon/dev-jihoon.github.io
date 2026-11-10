@@ -231,13 +231,7 @@ def _stub_py(name):
     return m
 for _n in ("requests_cache", "truststore"):
     _stub_py(_n)
-# openTSNE is not available in the browser build: stub it so PCA/MDS/etc. import
-# (only the t-SNE widget itself will not work)
-_ot = _stub_py("openTSNE")
-for _sub in ("tsne", "affinity", "initialization"):
-    _m = _stub_py("openTSNE." + _sub)
-    _m.log = logging.getLogger("openTSNE." + _sub)
-    setattr(_ot, _sub, _m)
+# openTSNE is cross-compiled into orange-sp.tar (build_opentsne.sh)
 
 for _m in ("QtCore", "QtGui", "QtWidgets", "QtSvg", "QtSvgWidgets", "QtXml"):
     _mod = __import__("PyQt6." + _m, fromlist=["x"])

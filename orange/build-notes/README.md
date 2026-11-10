@@ -6,7 +6,7 @@
 툴체인: conda-forge emscripten 4.0.9 / clang 21 / binaryen 121
 PyQt6를 Pyodide에 정적으로 넣는 방법은 github.com/JarrettSJohnson/pyodide-with-pyqt6 (GPL)을 참고해 이 환경에 맞게 고쳤다.
 
-순서: build_qt.sh → (Pyodide CPython 빌드) → build_pyqt.sh → build_link.sh → build_orange_ext.sh → getreg.py(위젯 목록 미리 만들기) → make_deploy.sh
+순서: build_qt.sh → (Pyodide CPython 빌드) → build_pyqt.sh → build_link.sh → build_orange_ext.sh → build_opentsne.sh → getreg.py(위젯 목록 미리 만들기) → make_deploy.sh
 
 ## 고친 것
 - patches/qtbase-6.10.2-orange-web.patch
@@ -67,3 +67,7 @@ PyQt6를 Pyodide에 정적으로 넣는 방법은 github.com/JarrettSJohnson/pyo
 - 시작할 때 Orange의 Welcome 화면(New/Open/Recent/Examples...)을 띄움. "Show at startup" 선택은 브라우저 localStorage에 기억 (?test= 일 때는 안 띄움)
 - 오류가 나면 Orange의 "Error Encountered" 상자 (인터넷 없을 때의 윈도우판과 같음), 네트워크 소켓은 바로 실패
 - 확인용: tests/dlgtest.py
+
+## t-SNE
+- openTSNE 1.0.4의 C++ 확장(quad_tree, _tsne, kl_divergence, matrix_mul(numpy FFT), annoy)을 build_opentsne.sh로 빌드해서 orange-sp.tar에 넣음 (전에는 가짜 모듈이라 t-SNE 위젯만 안 됐음)
+- 속도(크롬, 10개 특성): 500행 1.4초, 1000행 3.6초, 2000행 8.3초
