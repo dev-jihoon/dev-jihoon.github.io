@@ -43,6 +43,12 @@
     root.appendChild(st);
     clearInterval(iv);
   }, 500);
+  // When the on-screen keyboard opens, Safari scrolls the page even though it
+  // cannot scroll; scroll it back so touches land where Qt draws.
+  const unscroll = () => { if (window.scrollX || window.scrollY) window.scrollTo(0, 0); };
+  window.addEventListener("scroll", unscroll, { passive: true });
+  window.visualViewport?.addEventListener("resize", unscroll);
+  window.visualViewport?.addEventListener("scroll", unscroll);
   for (const t of ["gesturestart", "gesturechange", "gestureend", "dblclick"])
     document.addEventListener(t, (e) => e.preventDefault(), { passive: false, capture: true });
 })();
@@ -53,7 +59,7 @@ import { loadPyodide } from "./pyodide.mjs";
 //  - big files are stored gzip-compressed and decompressed here
 //  - every file is kept in Cache Storage for this build, so later visits
 //    load from the device instead of the network
-const BUILD = "5911a3817ef7";
+const BUILD = "f45553375050";
 const CACHE_NAME = "orange-web-" + BUILD;
 const GZ = ["pyodide.asm.wasm", "orange-sp.tar", "NanumGothic.ttf"];
 const _fetch = window.fetch.bind(window);

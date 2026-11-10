@@ -46,6 +46,37 @@ index 4e707e49..393cf577 100644
      if (!d->data) {
          qWarning("QDrag: No mimedata set before starting the drag");
          return d->executed_action;
+diff --git a/src/gui/kernel/qguiapplication.cpp b/src/gui/kernel/qguiapplication.cpp
+index b7901e16..5b84b85d 100644
+--- a/src/gui/kernel/qguiapplication.cpp
++++ b/src/gui/kernel/qguiapplication.cpp
+@@ -2389,15 +2389,25 @@ void QGuiApplicationPrivate::processMouseEvent(QWindowSystemInterfacePrivate::Mo
+     } else {
+         static unsigned long lastPressTimestamp = 0;
+         static QPointer<QWindow> lastPressWindow = nullptr;
++        static QPointF lastPressGlobalPos;
+         mouse_buttons = e->buttons;
+         if (mousePress) {
+             ulong doubleClickInterval = static_cast<ulong>(QGuiApplication::styleHints()->mouseDoubleClickInterval());
+             const auto timestampDelta = e->timestamp - lastPressTimestamp;
++            // Orange web build: also require the second press to be near the
++            // first one. For mouse events synthesized from touch the distance
++            // check on mouse move compares against the new touch point's own
++            // press position, so two quick taps far apart became a double click.
++            const auto doubleClickDistance = (e->device && e->device->type() == QInputDevice::DeviceType::Mouse ?
++                        mouseDoubleClickDistance : touchDoubleTapDistance);
++            const bool near = qAbs(globalPoint.x() - lastPressGlobalPos.x()) <= doubleClickDistance
++                              && qAbs(globalPoint.y() - lastPressGlobalPos.y()) <= doubleClickDistance;
+             doubleClick = timestampDelta > 0 && timestampDelta < doubleClickInterval
+-                          && button == mousePressButton && lastPressWindow == e->window;
++                          && button == mousePressButton && lastPressWindow == e->window && near;
+             mousePressButton = button;
+             lastPressTimestamp = e ->timestamp;
+             lastPressWindow = e->window;
++            lastPressGlobalPos = globalPoint;
+         }
+     }
+ 
 diff --git a/src/plugins/platforms/wasm/qwasminputcontext.cpp b/src/plugins/platforms/wasm/qwasminputcontext.cpp
 index 282559ec..753cc22b 100644
 --- a/src/plugins/platforms/wasm/qwasminputcontext.cpp
@@ -119,10 +150,80 @@ index b9340f31..5c94f381 100644
  }
  
 diff --git a/src/plugins/platforms/wasm/qwasmwindow.cpp b/src/plugins/platforms/wasm/qwasmwindow.cpp
-index a3222e51..42878f0c 100644
+index a3222e51..830978fb 100644
 --- a/src/plugins/platforms/wasm/qwasmwindow.cpp
 +++ b/src/plugins/platforms/wasm/qwasmwindow.cpp
-@@ -97,7 +97,14 @@ QWasmWindow::QWasmWindow(QWindow *w, QWasmDeadKeySupport *deadKeySupport,
+@@ -40,6 +40,69 @@ QT_BEGIN_NAMESPACE
+ 
+ Q_GUI_EXPORT int qt_defaultDpiX();
+ 
++// Orange web build: touch points can go stale when the browser delivers a
++// touch's pointerup/pointercancel to another element than the window that got
++// its pointerdown (seen on iPad Safari when a double tap opens a new window).
++// The stale point then stays "pressed" in that window, and Qt synthesizes every
++// later tap's mouse events at the stale position. Track which touch pointers
++// the browser still has down, and release the others in every window.
++namespace {
++QList<QWasmWindow *> &allWasmWindows()
++{
++    static QList<QWasmWindow *> windows;
++    return windows;
++}
++
++emscripten::val activeTouchPointers()
++{
++    static bool installed = false;
++    if (!installed) {
++        installed = true;
++        emscripten::val::global("eval")(std::string(R"JS((() => {
++            const s = new Set();
++            globalThis.__qtActiveTouches = s;
++            const opt = { capture: true, passive: true };
++            const on = (t, f) => window.addEventListener(t, f, opt);
++            on("pointerdown", (e) => {
++                if (e.pointerType !== "touch") return;
++                if (e.isPrimary) s.clear();   // first finger of a new gesture
++                s.add(e.pointerId);
++            });
++            const off = (e) => { if (e.pointerType === "touch") s.delete(e.pointerId); };
++            on("pointerup", off);
++            on("pointercancel", off);
++        })())JS"));
++    }
++    return emscripten::val::global("__qtActiveTouches");
++}
++} // namespace
++
++void QWasmWindow::releaseStaleTouchPoints(int currentPointerId)
++{
++    if (m_pointerIdToTouchPoints.isEmpty())
++        return;
++    emscripten::val active = activeTouchPointers();
++    QList<int> stale;
++    for (auto it = m_pointerIdToTouchPoints.cbegin(); it != m_pointerIdToTouchPoints.cend(); ++it) {
++        if (it.key() != currentPointerId && !active.call<bool>("has", it.key()))
++            stale.append(it.key());
++    }
++    if (stale.isEmpty())
++        return;
++    QList<QWindowSystemInterface::TouchPoint> points;
++    for (auto it = m_pointerIdToTouchPoints.cbegin(); it != m_pointerIdToTouchPoints.cend(); ++it) {
++        QWindowSystemInterface::TouchPoint p = it.value();
++        p.state = stale.contains(it.key()) ? QEventPoint::State::Released
++                                           : QEventPoint::State::Stationary;
++        points.append(p);
++    }
++    for (int id : stale)
++        m_pointerIdToTouchPoints.remove(id);
++    QWindowSystemInterface::handleTouchEvent(window(), QWasmIntegration::getTimestamp(),
++                                             platformScreen()->touchDevice(), points,
++                                             Qt::NoModifier);
++}
++
+ QWasmWindow::QWasmWindow(QWindow *w, QWasmDeadKeySupport *deadKeySupport,
+                          QWasmCompositor *compositor, QWasmBackingStore *backingStore,
+                          WId nativeHandle)
+@@ -97,7 +160,14 @@ QWasmWindow::QWasmWindow(QWindow *w, QWasmDeadKeySupport *deadKeySupport,
      // Set inputMode=none set to prevent the virtual keyboard from popping up.
      m_focusHelper["classList"].call<void>("add", emscripten::val("qt-window-focus-helper"));
      m_focusHelper.set("inputMode", std::string("none"));
@@ -138,7 +239,24 @@ index a3222e51..42878f0c 100644
      m_focusHelper["style"].set("position", "absolute");
      m_focusHelper["style"].set("left", 0);
      m_focusHelper["style"].set("top", 0);
-@@ -489,6 +496,15 @@ void QWasmWindow::setVisible(bool visible)
+@@ -125,6 +195,8 @@ QWasmWindow::QWasmWindow(QWindow *w, QWasmDeadKeySupport *deadKeySupport,
+     // Hide the canvas from screen readers.
+     m_canvas.call<void>("setAttribute", std::string("aria-hidden"), std::string("true"));
+     m_window.call<void>("appendChild", m_canvas);
++    activeTouchPointers();
++    allWasmWindows().append(this);
+ 
+     m_a11yContainer["classList"].call<void>("add", emscripten::val("qt-window-a11y-container"));
+     m_window.call<void>("appendChild", m_a11yContainer);
+@@ -234,6 +306,7 @@ void QWasmWindow::registerEventHandlers()
+ 
+ QWasmWindow::~QWasmWindow()
+ {
++    allWasmWindows().removeAll(this);
+     QWasmOpenGLContext::destroyWebGLContext(this);
+ 
+ #if QT_CONFIG(accessibility)
+@@ -489,6 +562,15 @@ void QWasmWindow::setVisible(bool visible)
  #if QT_CONFIG(accessibility)
          QWasmAccessibility::onShowWindow(window());
  #endif
@@ -154,6 +272,28 @@ index a3222e51..42878f0c 100644
      }
  }
  
+@@ -875,6 +957,9 @@ bool QWasmWindow::deliverPointerEvent(const PointerEvent &event)
+ 
+     QWindowSystemInterface::TouchPoint *touchPoint;
+ 
++    for (QWasmWindow *w : allWasmWindows())
++        w->releaseStaleTouchPoints(event.pointerId);
++
+     QPointF pointInTargetWindowCoords =
+             QPointF(window()->mapFromGlobal(targetPointClippedToScreen));
+     QPointF normalPosition(pointInTargetWindowCoords.x() / window()->width(),
+diff --git a/src/plugins/platforms/wasm/qwasmwindow.h b/src/plugins/platforms/wasm/qwasmwindow.h
+index 8e6e5021..56dac1dc 100644
+--- a/src/plugins/platforms/wasm/qwasmwindow.h
++++ b/src/plugins/platforms/wasm/qwasmwindow.h
+@@ -151,6 +151,7 @@ private:
+     bool processPointerEnterLeave(const PointerEvent &event);
+     void processPointer(const PointerEvent &event);
+     bool deliverPointerEvent(const PointerEvent &event);
++    void releaseStaleTouchPoints(int currentPointerId);
+     void handleWheelEvent(const emscripten::val &event);
+     bool processWheel(const WheelEvent &event);
+     Qt::WindowFlags fixTopLevelWindowFlags(Qt::WindowFlags) const;
 diff --git a/src/plugins/platforms/wasm/qwasmwindowtreenode.inc b/src/plugins/platforms/wasm/qwasmwindowtreenode.inc
 index c5a228d7..26c88a9a 100644
 --- a/src/plugins/platforms/wasm/qwasmwindowtreenode.inc

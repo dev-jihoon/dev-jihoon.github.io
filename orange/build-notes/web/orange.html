@@ -43,6 +43,12 @@
     root.appendChild(st);
     clearInterval(iv);
   }, 500);
+  // When the on-screen keyboard opens, Safari scrolls the page even though it
+  // cannot scroll; scroll it back so touches land where Qt draws.
+  const unscroll = () => { if (window.scrollX || window.scrollY) window.scrollTo(0, 0); };
+  window.addEventListener("scroll", unscroll, { passive: true });
+  window.visualViewport?.addEventListener("resize", unscroll);
+  window.visualViewport?.addEventListener("scroll", unscroll);
   for (const t of ["gesturestart", "gesturechange", "gestureend", "dblclick"])
     document.addEventListener(t, (e) => e.preventDefault(), { passive: false, capture: true });
 })();

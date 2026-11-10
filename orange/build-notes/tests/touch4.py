@@ -10,6 +10,21 @@ async def main():
         async def close(n):
             xy = await py(f"w = {W.format(n)}\ng_ = w.geometry()\njson.dumps([g_.right() - 10, g_.top() - 14])")
             await tap(*xy)
+        # quick taps on two different widgets are not a double tap
+        async def vis():
+            return await py("json.dumps(sorted(w.windowTitle() for w in QApplication.topLevelWidgets() if w.isVisible()))")
+        v0 = await vis()
+        await s.touch("touchStart", *s.node["t"]); await s.pg.wait_for_timeout(50); await s.touch("touchEnd", *s.node["t"])
+        await s.pg.wait_for_timeout(150)
+        await s.touch("touchStart", *s.node["f"]); await s.pg.wait_for_timeout(50); await s.touch("touchEnd", *s.node["f"])
+        await s.pg.wait_for_timeout(1500)
+        sel = await py("json.dumps([n.title for n in T.doc.selectedNodes()])")
+        check("two quick taps on different widgets open nothing", await vis() == v0, await vis())
+        check("the second tapped widget is selected", sel == ["File"], sel)
+        await tap(*s.node["k"])
+        await dtap(*s.node["ts"])
+        check("tap one widget, then double tap another opens the other", any(x.startswith("Data Table") for x in await vis()) and len(await vis()) == len(v0) + 1, await vis())
+        await close('ts')
         # Data Table: scroll with a finger, then tap a row selects it
         await dtap(*s.node["t"])
         v = await py(f"w = {W.format('t')}\nv = [v for v in w.findChildren(QTableView) if v.isVisible()][0]\nr = v.viewport().rect()\np = v.viewport().mapToGlobal(r.center())\njson.dumps([p.x(), p.y(), v.verticalScrollBar().value()])")
