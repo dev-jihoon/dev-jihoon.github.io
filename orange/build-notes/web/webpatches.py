@@ -697,12 +697,19 @@ class _TouchTweaks(QObject):
             p = p.parentWidget()
         return False
 
+    def _forget(self, key):
+        def gone(*_):
+            self._done.discard(key)
+        return gone
+
     def _setup(self, w):
         key = id(w)
         if key in self._done:
             return
         self._done.add(key)
-        w.destroyed.connect(lambda *_, key=key: self._done.discard(key))
+        # (no keyword-only defaults here: PyQt drops them for slots called
+        # while the object is destroyed)
+        w.destroyed.connect(self._forget(key))
         if isinstance(w, self.text_types) or \
                 (isinstance(w, self.QComboBox) and w.isEditable()):
             if w.focusPolicy() & Qt.TabFocus:

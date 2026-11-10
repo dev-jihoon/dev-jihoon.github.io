@@ -83,6 +83,7 @@
     .title-bar .close:hover { background-color: #c42b1c; background-image: ${glyph(G.close, "#fff")} !important; opacity: 1; }
     .title-bar .close:active { background-color: #c84031; background-image: ${glyph(G.close, "#fff")} !important; }
     .qt-decorated-window:not(.maximized) .title-bar .close { border-top-right-radius: 7px; }
+    .qt-decorated-window.popup { filter: drop-shadow(0 8px 8px rgba(0,0,0,.14)) drop-shadow(0 0 1px rgba(0,0,0,.10)); }
   `;
   // Qt draws into canvases inside its shadow DOM; page CSS does not reach them
   const iv = setInterval(() => {
@@ -109,7 +110,7 @@ import { loadPyodide } from "./pyodide.mjs";
 //  - big files are stored gzip-compressed and decompressed here
 //  - every file is kept in Cache Storage for this build, so later visits
 //    load from the device instead of the network
-const BUILD = "ad7b416cd485";
+const BUILD = "3192180a85e3";
 const CACHE_NAME = "orange-web-" + BUILD;
 const GZ = ["pyodide.asm.wasm", "orange-sp.tar", "NanumGothic.ttf", "winfonts.tar"];
 const _fetch = window.fetch.bind(window);

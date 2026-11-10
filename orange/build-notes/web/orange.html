@@ -83,6 +83,7 @@
     .title-bar .close:hover { background-color: #c42b1c; background-image: ${glyph(G.close, "#fff")} !important; opacity: 1; }
     .title-bar .close:active { background-color: #c84031; background-image: ${glyph(G.close, "#fff")} !important; }
     .qt-decorated-window:not(.maximized) .title-bar .close { border-top-right-radius: 7px; }
+    .qt-decorated-window.popup { filter: drop-shadow(0 8px 8px rgba(0,0,0,.14)) drop-shadow(0 0 1px rgba(0,0,0,.10)); }
   `;
   // Qt draws into canvases inside its shadow DOM; page CSS does not reach them
   const iv = setInterval(() => {

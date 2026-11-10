@@ -110,6 +110,25 @@ p = b.mapToGlobal(b.rect().center()); json.dumps([p.x(), p.y()])""")
                 print("chooser:", e)
         n = await py(f"w = {W.format('f')}\njson.dumps([len(w.data) if w.data is not None else None, w.data.domain.class_var.name if w.data is not None and w.data.domain.class_var else None])")
         check("the chosen file is loaded", n[0] == 3, n)
+        # remove a widget whose window was opened: no error box
+        await py("[w.close() for w in QApplication.topLevelWidgets() if w.isVisible() and w.windowTitle() != 'Untitled [*]']\njson.dumps(1)")
+        await dtap(*s.node["sp"])
+        await s.pg.wait_for_timeout(800)
+        await close('sp')
+        await s.hold(*s.node["sp"], ms=900)
+        await s.pg.wait_for_timeout(500)
+        rm = await py("""ms = [m for m in QApplication.topLevelWidgets() if isinstance(m, QMenu) and m.isVisible()]
+a = [a for a in ms[0].actions() if a.text() == 'Remove'][0] if ms else None
+r = ms[0].actionGeometry(a) if a else None
+p = ms[0].mapToGlobal(r.center()) if r else None
+json.dumps([p.x(), p.y()] if p else None)""")
+        if rm:
+            await tap(*rm)
+            await s.pg.wait_for_timeout(1500)
+        v = await vis()
+        nodes = await py("json.dumps([n.title for n in T.scheme.nodes])")
+        check("remove an opened widget: removed, no error", rm is not None and "Scatter Plot" not in nodes
+              and not any("Error" in x for x in v), (rm, nodes, v))
         print("\nSUMMARY %d/%d" % (sum(res), len(res)))
         errs = [l for l in s.logs if "Traceback" in l]
         if errs:

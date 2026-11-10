@@ -55,6 +55,8 @@ PyQt6를 Pyodide에 정적으로 넣는 방법은 github.com/JarrettSJohnson/pyo
 - 색: 밝은 테마 고정(아이패드 다크 모드여도), 윈도우 기본 강조색
 - 창 테두리·제목 줄: 윈도우 11처럼 30px 흰 제목 줄, 최소화/최대화/닫기(빨강) 버튼, 둥근 모서리와 그림자 (web/orange.html의 WIN11_FRAMES), 제목 뒤에 " - Orange", 대화상자는 닫기만
 - 셀 편집기처럼 버튼을 누른 채 코드로 연 콤보 목록이 손을 떼자마자 닫히지 않게 (qcombobox.cpp)
+- 편집기가 열린 칸은 글자를 그리지 않음 (이 스타일의 편집기 배경이 반투명이라 글자가 겹쳐 보였음)
+- 메뉴·콤보 목록의 작고 진한 그림자 대신, 페이지가 윈도우 11 팝업처럼 부드러운 그림자를 그림 (팝업 창에 popup 클래스)
 
 ## 막히던 대화상자 (webpatches.patch_modal_dialogs 등)
 - 저장 대화상자: 바로 임시 경로를 주고, 파일이 써지면 다운로드 (Save Data, Save Workflow Image as SVG 등)

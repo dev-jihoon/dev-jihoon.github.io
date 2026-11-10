@@ -185,7 +185,7 @@ index b9340f31..5c94f381 100644
  }
  
 diff --git a/src/plugins/platforms/wasm/qwasmwindow.cpp b/src/plugins/platforms/wasm/qwasmwindow.cpp
-index a3222e51..bca27891 100644
+index a3222e51..5d7eba80 100644
 --- a/src/plugins/platforms/wasm/qwasmwindow.cpp
 +++ b/src/plugins/platforms/wasm/qwasmwindow.cpp
 @@ -40,6 +40,69 @@ QT_BEGIN_NAMESPACE
@@ -307,7 +307,13 @@ index a3222e51..bca27891 100644
      }
  }
  
-@@ -567,6 +649,9 @@ void QWasmWindow::setWindowFlags(Qt::WindowFlags flags)
+@@ -563,10 +645,15 @@ void QWasmWindow::setWindowFlags(Qt::WindowFlags flags)
+     dom::syncCSSClassWith(m_decoratedWindow, "has-border", hasBorder());
+     dom::syncCSSClassWith(m_decoratedWindow, "has-shadow", hasShadow());
+     dom::syncCSSClassWith(m_decoratedWindow, "has-title", hasTitleBar());
++    // Orange web build: lets the page give pop-ups (menus, combo lists) a shadow
++    dom::syncCSSClassWith(m_decoratedWindow, "popup", windowIsPopupType(flags));
+     dom::syncCSSClassWith(m_decoratedWindow, "transparent-for-input",
                            flags.testFlag(Qt::WindowTransparentForInput));
  
      m_nonClientArea->titleBar()->setMaximizeVisible(hasMaximizeButton());
@@ -317,7 +323,7 @@ index a3222e51..bca27891 100644
      m_nonClientArea->titleBar()->setCloseVisible(m_flags.testFlag(Qt::WindowCloseButtonHint));
  }
  
-@@ -596,13 +681,14 @@ void QWasmWindow::setWindowState(Qt::WindowStates newState)
+@@ -596,13 +683,14 @@ void QWasmWindow::setWindowState(Qt::WindowStates newState)
  
  void QWasmWindow::setWindowTitle(const QString &title)
  {
@@ -334,7 +340,7 @@ index a3222e51..bca27891 100644
      if (pixmap.isNull()) {
          m_nonClientArea->titleBar()->setIcon(
                  Base64IconStore::get()->getIcon(Base64IconStore::IconType::QtLogo), "svg+xml");
-@@ -875,6 +961,9 @@ bool QWasmWindow::deliverPointerEvent(const PointerEvent &event)
+@@ -875,6 +963,9 @@ bool QWasmWindow::deliverPointerEvent(const PointerEvent &event)
  
      QWindowSystemInterface::TouchPoint *touchPoint;
  
@@ -344,7 +350,7 @@ index a3222e51..bca27891 100644
      QPointF pointInTargetWindowCoords =
              QPointF(window()->mapFromGlobal(targetPointClippedToScreen));
      QPointF normalPosition(pointInTargetWindowCoords.x() / window()->width(),
-@@ -966,8 +1055,12 @@ bool QWasmWindow::processWheel(const WheelEvent &event)
+@@ -966,8 +1057,12 @@ bool QWasmWindow::processWheel(const WheelEvent &event)
  Qt::WindowFlags QWasmWindow::fixTopLevelWindowFlags(Qt::WindowFlags flags) const
  {
      if (!(flags.testFlag(Qt::CustomizeWindowHint))) {
@@ -358,7 +364,7 @@ index a3222e51..bca27891 100644
                    |Qt::WindowMaximizeButtonHint|Qt::WindowCloseButtonHint;
          }
          if (flags.testFlag(Qt::Dialog) || flags.testFlag(Qt::Tool))
-@@ -1049,6 +1142,10 @@ bool QWasmWindow::hasShadow() const
+@@ -1049,6 +1144,10 @@ bool QWasmWindow::hasShadow() const
  
  bool QWasmWindow::hasMaximizeButton() const
  {
@@ -538,10 +544,10 @@ index bc1cceff..50cc02b0 100644
          list << "Fusion"_L1;
 diff --git a/src/widgets/styles/winemu/qwindows11style.cpp b/src/widgets/styles/winemu/qwindows11style.cpp
 new file mode 100644
-index 00000000..18944422
+index 00000000..37fcd837
 --- /dev/null
 +++ b/src/widgets/styles/winemu/qwindows11style.cpp
-@@ -0,0 +1,2351 @@
+@@ -0,0 +1,2350 @@
 +// Copyright (C) 2022 The Qt Company Ltd.
 +// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 +
@@ -2295,7 +2301,9 @@ index 00000000..18944422
 +                vopt->icon.paint(painter, iconRect, vopt->decorationAlignment, mode, state);
 +
 +                painter->setPen(QPen(option->palette.text().color()));
-+                if (!view || !view->isPersistentEditorOpen(vopt->index))
++                // Orange web build: no text under any open editor (the editor's
++                // background is translucent in this style, so it would show through)
++                if (!view || !view->indexWidget(vopt->index))
 +                    d->viewItemDrawText(painter, vopt, textRect);
 +                if (vopt->state & State_Selected
 +                 && (vopt->viewItemPosition == QStyleOptionViewItem::Beginning
@@ -2696,11 +2704,8 @@ index 00000000..18944422
 +        widget->setPalette(pal);
 +        if (!isScrollBar
 +            && widget->graphicsProxyWidget() == nullptr) { // for menus and combobox containers...
-+            QGraphicsDropShadowEffect* dropshadow = new QGraphicsDropShadowEffect(widget);
-+            dropshadow->setBlurRadius(3);
-+            dropshadow->setXOffset(3);
-+            dropshadow->setYOffset(3);
-+            widget->setGraphicsEffect(dropshadow);
++            // Orange web build: the page draws a soft Windows 11 pop-up shadow
++            // around the window (CSS) instead of this small hard one
 +        }
 +    } else if (QComboBox* cb = qobject_cast<QComboBox*>(widget)) {
 +        if (cb->isEditable()) {
