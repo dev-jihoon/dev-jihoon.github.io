@@ -9,7 +9,7 @@
 <title>Orange</title>
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #eee; font-family: -apple-system, sans-serif;
-               overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+               overscroll-behavior: none; touch-action: none; -webkit-text-size-adjust: 100%; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   #qt { position: fixed; inset: 0; touch-action: none; }
   #loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: #fff; z-index: 10; }
   #status { color: #555; font-size: 15px; }
@@ -21,6 +21,32 @@
 <body>
 <div id="qt"></div>
 <div id="loading"><div style="font-size:20px;font-weight:600">Orange</div><div id="bar"><div></div></div><div id="status">Loading</div><div style="color:#999;font-size:12px">The first visit may take a minute or two. Later visits are faster.</div><div id="err"></div></div>
+<script>
+// iPad Safari ignores user-scalable=no: stop double-tap and pinch zoom ourselves.
+// (Qt reads pointer events, so cancelling the touch events' default does not
+// change what Qt sees.)
+(() => {
+  let lastEnd = 0;
+  document.addEventListener("touchend", (e) => {
+    const now = Date.now();
+    if (now - lastEnd < 400) e.preventDefault();
+    lastEnd = now;
+  }, { passive: false, capture: true });
+  document.addEventListener("touchmove", (e) => { if (e.touches.length > 1) e.preventDefault(); },
+                            { passive: false, capture: true });
+  // Qt draws into canvases inside its shadow DOM; page CSS does not reach them
+  const iv = setInterval(() => {
+    const root = document.getElementById("qt-shadow-container")?.shadowRoot;
+    if (!root) return;
+    const st = document.createElement("style");
+    st.textContent = "* { touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; }";
+    root.appendChild(st);
+    clearInterval(iv);
+  }, 500);
+  for (const t of ["gesturestart", "gesturechange", "gestureend", "dblclick"])
+    document.addEventListener(t, (e) => e.preventDefault(), { passive: false, capture: true });
+})();
+</script>
 <script type="module">
 import { loadPyodide } from "./pyodide.mjs";
 // Packages Orange needs before its window can open
