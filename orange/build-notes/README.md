@@ -13,6 +13,8 @@ PyQt6를 Pyodide에 정적으로 넣는 방법은 github.com/JarrettSJohnson/pyo
   - 일반 창을 전체화면이 아니라 떠 있는 창으로 열기 (ShowIsFullScreen=false)
   - 중첩 이벤트 루프(dialog.exec(), menu.exec())에서 앱을 죽이지 않고 바로 반환
   - QDrag::exec()는 바로 IgnoreAction 반환
+  - 터치 기기에서는 창 포커스용 숨은 요소를 contenteditable로 만들지 않음 (아이패드 키보드가 계속 뜨던 문제)
+  - 두 번 탭 인정 거리 30px, 더블클릭 간격 500ms
 - patches/pyqt6-qaction-setmenu.txt: QAction.setMenu 함수 타입 불일치 수정
 - patches/anyqt-fixes.patch: ctypes로 Qt 공유 라이브러리를 못 찾을 때 대체 구현
 - web/boot.py: 스레드 대체(QThread/QThreadPool/ThreadPoolExecutor를 동기 실행), 없는 Qt 모듈 스텁, 한글 폰트, exec() 없이 캔버스 시작
@@ -27,3 +29,9 @@ PyQt6를 Pyodide에 정적으로 넣는 방법은 github.com/JarrettSJohnson/pyo
 - matplotlib 빼고(patches/orangewidget-matplotlib-optional.patch), networkx는 화면이 뜬 뒤 백그라운드로 로드
 - 파이썬 로딩과 동시에 오렌지/폰트/위젯 목록 다운로드 시작
 - 모든 파일을 빌드별로 Cache Storage에 저장해서 두 번째 접속부터는 네트워크를 거의 안 씀
+
+## 터치 기기 (webpatches.apply_touch_tweaks)
+- 목록·표·설정 패널을 손가락으로 끌어서 스크롤 (QScroller)
+- 글자 입력칸은 직접 탭할 때만 포커스 (창이 열릴 때 키보드가 뜨지 않게)
+- 스핀박스 화살표를 탭하면 값만 바뀌고 키보드는 안 뜸, 숫자 부분을 탭하면 입력
+- 메인 창을 맨 아래로 고정해서 캔버스를 탭해도 위젯 창이 뒤로 숨지 않음 (모든 기기)

@@ -309,8 +309,14 @@ try:
     set_global_registry(registry)
     log("widgets discovered:", len(registry.widgets()))
     mainwindow = main.setup_main_window()
+    # The main window is the "desktop" in the browser: keep widget windows
+    # above it, so tapping the canvas does not hide them behind it.
+    from AnyQt.QtCore import Qt as _Qt
+    mainwindow.setWindowFlag(_Qt.WindowType.WindowStaysOnBottomHint, True)
     mainwindow.showMaximized()
     webpatches.install_unload_guard(mainwindow)
+    if webpatches.apply_touch_tweaks(mainwindow):
+        log("touch device: touch tweaks on")
     globals()["_orange_main"] = (main, mainwindow)
     sys.modules["__main__"]._orange_main = (main, mainwindow)
     log("main window shown")

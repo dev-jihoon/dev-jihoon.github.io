@@ -609,6 +609,117 @@ def install_unload_guard(mainwindow):
     update()
 
 
+# ---------------------------------------------------------------------------
+# Touch devices (iPad)
+# ---------------------------------------------------------------------------
+def is_touch_device():
+    try:
+        return int(_js().navigator.maxTouchPoints) > 0
+    except Exception:
+        return False
+
+
+class _TouchTweaks(QObject):
+    """App-wide event filter used on touch devices:
+
+    - scroll lists, tables and panels by dragging a finger (QScroller)
+    - text fields only take focus when tapped, so the on-screen keyboard
+      does not appear when a window opens
+    - tapping the arrows of a spin box steps the value without focusing
+      its text field (which would bring up the keyboard)
+    """
+    def __init__(self):
+        super().__init__()
+        from AnyQt.QtWidgets import (
+            QAbstractScrollArea, QGraphicsView, QLineEdit, QAbstractSpinBox,
+            QTextEdit, QPlainTextEdit, QComboBox)
+        self._done = set()
+        self.QAbstractScrollArea = QAbstractScrollArea
+        self.QGraphicsView = QGraphicsView
+        self.text_types = (QLineEdit, QAbstractSpinBox, QTextEdit, QPlainTextEdit)
+        self.QComboBox = QComboBox
+        self.QAbstractSpinBox = QAbstractSpinBox
+        try:
+            from AnyQt.QtWidgets import QScroller
+            self.QScroller = QScroller
+        except ImportError:
+            self.QScroller = None
+
+    def _setup(self, w):
+        key = id(w)
+        if key in self._done:
+            return
+        self._done.add(key)
+        w.destroyed.connect(lambda *_, key=key: self._done.discard(key))
+        if isinstance(w, self.text_types) or \
+                (isinstance(w, self.QComboBox) and w.isEditable()):
+            if w.focusPolicy() & Qt.TabFocus:
+                w.setFocusPolicy(Qt.ClickFocus)
+        if isinstance(w, self.QAbstractSpinBox):
+            # Tapping the arrows must not focus the spin box (that brings up
+            # the keyboard). The spin box itself takes no focus; its text
+            # field still does when tapped, and forwards focus to it.
+            w.setFocusPolicy(Qt.NoFocus)
+            w.setAttribute(Qt.WA_AcceptTouchEvents, True)
+        if self.QScroller is not None and isinstance(w, self.QAbstractScrollArea) \
+                and not isinstance(w, self.QGraphicsView) \
+                and not isinstance(w, (self.QAbstractSpinBox,)):
+            try:
+                self.QScroller.grabGesture(
+                    w.viewport(), self.QScroller.ScrollerGestureType.TouchGesture)
+            except Exception:
+                pass
+
+    def eventFilter(self, obj, ev):
+        t = ev.type()
+        if t == QEvent.Show and isinstance(obj, QWidget):
+            self._setup(obj)
+        elif t == QEvent.MouseButtonPress and \
+                isinstance(obj.parent() if isinstance(obj, QWidget) else None,
+                           self.QAbstractSpinBox):
+            # mouse/trackpad click in the text part of a spin box
+            obj.parent().setFocus(Qt.MouseFocusReason)
+        elif t in (QEvent.TouchBegin, QEvent.TouchUpdate, QEvent.TouchEnd) \
+                and isinstance(obj, self.QAbstractSpinBox):
+            points = ev.points()
+            if not points:
+                return False
+            pos = points[0].position().toPoint()
+            if pos.x() < obj.width() - 22:
+                # text part: focus it, which brings up the keyboard
+                if t == QEvent.TouchBegin and obj.isEnabled():
+                    obj.setFocus(Qt.MouseFocusReason)
+                return False
+            if t == QEvent.TouchBegin and obj.isEnabled():
+                if pos.y() < obj.height() / 2:
+                    obj.stepUp()
+                else:
+                    obj.stepDown()
+            ev.accept()
+            return True
+        return False
+
+
+_touch_tweaks = None
+
+
+def apply_touch_tweaks(mainwindow):
+    global _touch_tweaks
+    if not is_touch_device():
+        return False
+    app = QApplication.instance()
+    _touch_tweaks = _TouchTweaks()
+    app.installEventFilter(_touch_tweaks)
+    for w in app.allWidgets():
+        _touch_tweaks._setup(w)
+    # start with the canvas focused instead of the toolbox filter field
+    try:
+        mainwindow.current_document().view().setFocus(Qt.OtherFocusReason)
+    except Exception:
+        pass
+    return True
+
+
 def apply_all(mainwindow_cls):
     for fn in (patch_menus, patch_interactions, patch_link_dialogs,
                patch_toolbox_drag, patch_file_widget, patch_save_graph):

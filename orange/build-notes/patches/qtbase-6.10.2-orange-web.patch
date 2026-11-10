@@ -59,3 +59,39 @@ index 7ece025b..350c7023 100644
      case UnderlineShortcut:
          return platform() != Platform::MacOS;
      default:
+diff --git a/src/plugins/platforms/wasm/qwasmtheme.cpp b/src/plugins/platforms/wasm/qwasmtheme.cpp
+index b9340f31..5c94f381 100644
+--- a/src/plugins/platforms/wasm/qwasmtheme.cpp
++++ b/src/plugins/platforms/wasm/qwasmtheme.cpp
+@@ -116,6 +116,11 @@ QVariant QWasmTheme::themeHint(ThemeHint hint) const
+         return QVariant(QStringList() << "Fusion"_L1);
+     if (hint == QPlatformTheme::UiEffects)
+         return QVariant(int(HoverEffect));
++    // Orange web build: fingers land a few pixels apart on a double tap
++    if (hint == QPlatformTheme::TouchDoubleTapDistance)
++        return QVariant(30);
++    if (hint == QPlatformTheme::MouseDoubleClickInterval)
++        return QVariant(500);
+     return QPlatformTheme::themeHint(hint);
+ }
+ 
+diff --git a/src/plugins/platforms/wasm/qwasmwindow.cpp b/src/plugins/platforms/wasm/qwasmwindow.cpp
+index a3222e51..faeddbc8 100644
+--- a/src/plugins/platforms/wasm/qwasmwindow.cpp
++++ b/src/plugins/platforms/wasm/qwasmwindow.cpp
+@@ -97,7 +97,14 @@ QWasmWindow::QWasmWindow(QWindow *w, QWasmDeadKeySupport *deadKeySupport,
+     // Set inputMode=none set to prevent the virtual keyboard from popping up.
+     m_focusHelper["classList"].call<void>("add", emscripten::val("qt-window-focus-helper"));
+     m_focusHelper.set("inputMode", std::string("none"));
+-    m_focusHelper.call<void>("setAttribute", std::string("contenteditable"), std::string("true"));
++    // Orange web build: on touch devices (iPad) a focused contenteditable
++    // element brings up the keyboard bar even with inputMode=none, and the
++    // focus helper is focused on every tap. Make it focusable without being
++    // editable there; hardware key events still arrive.
++    if (emscripten::val::global("navigator")["maxTouchPoints"].as<int>() > 0)
++        m_focusHelper.call<void>("setAttribute", std::string("tabindex"), std::string("-1"));
++    else
++        m_focusHelper.call<void>("setAttribute", std::string("contenteditable"), std::string("true"));
+     m_focusHelper["style"].set("position", "absolute");
+     m_focusHelper["style"].set("left", 0);
+     m_focusHelper["style"].set("top", 0);
