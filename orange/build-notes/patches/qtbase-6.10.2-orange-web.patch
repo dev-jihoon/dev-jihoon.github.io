@@ -555,7 +555,7 @@ index bc1cceff..50cc02b0 100644
          list << "Fusion"_L1;
 diff --git a/src/widgets/styles/winemu/qwindows11style.cpp b/src/widgets/styles/winemu/qwindows11style.cpp
 new file mode 100644
-index 00000000..37fcd837
+index 00000000..6a2920dc
 --- /dev/null
 +++ b/src/widgets/styles/winemu/qwindows11style.cpp
 @@ -0,0 +1,2350 @@
@@ -2038,28 +2038,26 @@ index 00000000..37fcd837
 +        }
 +        break;
 +    case CE_MenuBarItem:
++        // Orange web build: a compact white menu bar as in Windows 11 desktop
++        // apps (application font, 7px padding, subtle rounded hover) instead of
++        // Qt 6.8's 10pt / 32px items
 +        if (const auto *mbi = qstyleoption_cast<const QStyleOptionMenuItem *>(option))  {
-+            constexpr int hPadding = 11;
-+            constexpr int topPadding = 4;
-+            constexpr int bottomPadding = 6;
-+            bool active = mbi->state & State_Selected;
-+            bool hasFocus = mbi->state & State_HasFocus;
-+            bool down = mbi->state & State_Sunken;
-+            bool enabled = mbi->state & State_Enabled;
-+            QStyleOptionMenuItem newMbi = *mbi;
-+            newMbi.font.setPointSize(10);
-+            if (enabled && active) {
-+                if (down)
-+                    painter->setBrushOrigin(painter->brushOrigin() + QPoint(1, 1));
-+                if (hasFocus) {
-+                    painter->setBrush(WINUI3Colors[colorSchemeIndex][subtleHighlightColor]);
-+                    painter->setPen(Qt::NoPen);
-+                    QRect rect = mbi->rect.marginsRemoved(QMargins(5,0,5,0));
-+                    painter->drawRoundedRect(rect,secondLevelRoundingRadius,secondLevelRoundingRadius,Qt::AbsoluteSize);
-+                }
++            constexpr int hPadding = 7;
++            const bool active = mbi->state & State_Selected;
++            const bool down = mbi->state & State_Sunken;
++            const bool enabled = mbi->state & State_Enabled;
++            painter->fillRect(mbi->rect, QColor(0xFF, 0xFF, 0xFF));
++            if (enabled && (active || down)) {
++                painter->save();
++                painter->setRenderHint(QPainter::Antialiasing);
++                painter->setPen(Qt::NoPen);
++                painter->setBrush(down ? QColor(0, 0, 0, 0x14) : QColor(0, 0, 0, 0x0B));
++                painter->drawRoundedRect(QRectF(mbi->rect).adjusted(1, 2, -1, -2), 4, 4);
++                painter->restore();
 +            }
-+            newMbi.rect.adjust(hPadding,topPadding,-hPadding,-bottomPadding);
-+            painter->setFont(newMbi.font);
++            QStyleOptionMenuItem newMbi = *mbi;
++            newMbi.state &= ~(State_Selected | State_Sunken);
++            newMbi.rect.adjust(hPadding, 0, -hPadding, 0);
 +            QCommonStyle::drawControl(element, &newMbi, painter, widget);
 +        }
 +        break;
@@ -2197,6 +2195,7 @@ index 00000000..37fcd837
 +        break;
 +#endif // QT_CONFIG(menu)
 +    case CE_MenuBarEmptyArea: {
++        painter->fillRect(option->rect, QColor(0xFF, 0xFF, 0xFF));   // Orange web build
 +        break;
 +    }
 +    case CE_HeaderEmptyArea:
@@ -2578,12 +2577,13 @@ index 00000000..37fcd837
 +#if QT_CONFIG(menubar)
 +    case CT_MenuBarItem:
 +        if (!contentSize.isEmpty()) {
-+            constexpr int hMargin = 2 * 6;
-+            constexpr int hPadding = 2 * 11;
-+            constexpr int itemHeight = 32;
-+            contentSize.setWidth(contentSize.width() + hMargin + hPadding);
++            // Orange web build: compact, see CE_MenuBarItem
++            constexpr int hPadding = 2 * 7;
++            const int itemHeight = (widget ? widget->fontMetrics().height()
++                                           : option->fontMetrics.height()) + 8;
++            contentSize.setWidth(contentSize.width() + hPadding);
 +#if QT_CONFIG(tabwidget)
-+            if (widget->parent() && !qobject_cast<const QTabWidget *>(widget->parent()))
++            if (widget && widget->parent() && !qobject_cast<const QTabWidget *>(widget->parent()))
 +#endif
 +                contentSize.setHeight(itemHeight);
 +        }
@@ -2992,10 +2992,10 @@ index 00000000..ea15813d
 +#endif // QWINDOWS11STYLE_P_H
 diff --git a/src/widgets/styles/winemu/qwindowsvistastyle.cpp b/src/widgets/styles/winemu/qwindowsvistastyle.cpp
 new file mode 100644
-index 00000000..0188f0e5
+index 00000000..8c3dfb7e
 --- /dev/null
 +++ b/src/widgets/styles/winemu/qwindowsvistastyle.cpp
-@@ -0,0 +1,598 @@
+@@ -0,0 +1,630 @@
 +// Orange web build: stand-in for the Windows-only QWindowsVistaStyle (Qt 6.8.1),
 +// so that QWindows11Style can run in the browser. Metrics, hints and layout
 +// follow the real style; the few elements it draws through the Windows theme
@@ -3163,6 +3163,34 @@ index 00000000..0188f0e5
 +    case CE_Splitter:
 +        painter->eraseRect(option->rect);
 +        return;
++    case CE_DockWidgetTitle:
++        // as the real style draws a docked title (no theme involved)
++        if (const auto *dwOpt = qstyleoption_cast<const QStyleOptionDockWidget *>(option)) {
++            QRect rect = option->rect;
++            painter->save();
++            if (dwOpt->verticalTitleBar) {
++                rect = rect.transposed();
++                painter->translate(rect.left() - 1, rect.top() + rect.width());
++                painter->rotate(-90);
++                painter->translate(-rect.left() + 1, -rect.top());
++            }
++            painter->setBrush(option->palette.window().color().darker(110));
++            painter->setPen(option->palette.window().color().darker(130));
++            painter->drawRect(rect.adjusted(0, 1, -1, -3));
++            if (!dwOpt->title.isEmpty()) {
++                const QString titleText = painter->fontMetrics().elidedText(
++                        dwOpt->title, Qt::ElideRight,
++                        dwOpt->verticalTitleBar ? rect.height() : rect.width());
++                const int indent = 4;
++                drawItemText(painter, rect.adjusted(indent + 1, 1, -indent - 1, -1),
++                             Qt::AlignLeft | Qt::AlignVCenter | Qt::TextHideMnemonic,
++                             dwOpt->palette, dwOpt->state & State_Enabled, titleText,
++                             QPalette::WindowText);
++            }
++            painter->restore();
++            return;
++        }
++        break;
 +    case CE_ToolBar:
 +        if (const auto *toolbar = qstyleoption_cast<const QStyleOptionToolBar *>(option)) {
 +            QPalette pal = option->palette;
@@ -3499,6 +3527,10 @@ index 00000000..0188f0e5
 +        return Qt::AlignTop | Qt::AlignHCenter;
 +    case SH_ItemView_DrawDelegateFrame:
 +        return 1;
++    case SH_UnderlineShortcut:
++        // Windows hides the &-underlines in menus and labels by default
++        // ("Underline access keys" off)
++        return 0;
 +    default:
 +        break;
 +    }
